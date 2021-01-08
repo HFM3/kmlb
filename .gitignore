@@ -9,6 +9,9 @@ __pycache__/
 # IDE specific files
 .idea/
 
+# Sandbox
+tests/sandbox/
+
 # Distribution / packaging
 .Python
 build/
