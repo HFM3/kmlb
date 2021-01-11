@@ -47,7 +47,7 @@ clock_tower = kmlb.point(coords, name, attribute_titles, attributes, 'RTG', 'Red
 # WRITE KML FILE
 kmlb.kml('Boston Clock Tower',  # Name
          [clock_tower],  # Features to include
-         r'C:\Users\User_Name\Desktop\KMLB_Tutorial.kml',  # Export path
+         r'C:\Users\UserName\Desktop\KMLB_Tutorial.kml',  # Export path
          'Created with KMLB Python Package',  # KML Description
          [pt_style],  # Styles to include
          )
