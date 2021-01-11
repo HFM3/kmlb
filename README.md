@@ -83,9 +83,9 @@ point(coords, name, headers=[], attributes=[], altitude_mode="CTG", style_to_use
 | ------------- | ------ | ------------------------------------------------------------ |
 | headers       | List   | A list of the attribute titles for the point feature         |
 | attributes    | List   | A list of properties for the point feature.                  |
-| altitude_mode | String | One of the abbreviated altitude mode options: `'CTG'`, `'RTG'`, `'ABS'` (Default = `'CTG'`) |
+| altitude_mode | String | One of the abbreviated altitude mode options: `CTG`, `RTG`, `ABS`  (Default = `'CTG'`) |
 | style_to_use  | String | The name of the `point_style()` to be used (Default = `None`). |
-| hidden        | Bool   | A value of `'True'` or `'False'` where `'False'` means that the point will be visible. (Default = `'False'`). |
+| hidden        | Bool   | A value of `True` or `False` where `False` means that the point will be visible. (Default = `False`). |
 
 #### Return
 
@@ -163,9 +163,9 @@ line(coords, name, headers=[], attributes=[], altitude_mode="CTG", style_to_use=
 | ----------------- | ------ | ------------------------------------------------------------ |
 | headers           | List   | A list of the attribute titles for the point feature         |
 | attributes        | List   | A list of properties for the point feature.                  |
-| altitude_mode     | String | One of the abbreviated altitude mode options: `'CTG'`, `'RTG'`, `'ABS'` (Default = `'CTG'`) |
+| altitude_mode     | String | One of the abbreviated altitude mode options: `CTG`, `RTG`, `ABS` (Default = `CTG`) |
 | style_to_use      | String | The name of the line_style()` to be used (Default = `None`). |
-| hidden            | Bool   | A value of `'True'` or `'False'` where `'False'` means that the point will be visible. (Default = `'False'`). |
+| hidden            | Bool   | A value of `True` or `True` where `True` means that the point will be visible. (Default = `True`). |
 | follow_terrain    | Bool   | Determines whether or not the line will follow terrain and curve of the Earth. (Default = `True`). |
 | extrude_to_ground | Bool   | Determines whether or not the vertices of the line are extruded toward the center of the Earth's center. (Default = `False`). |
 
@@ -246,9 +246,9 @@ polygon(coords, name, headers=[], attributes=[], altitude_mode="CTG", style_to_u
 | ----------------- | ------ | ------------------------------------------------------------ |
 | headers           | List   | A list of the attribute titles for the point feature         |
 | attributes        | List   | A list of properties for the point feature.                  |
-| altitude_mode     | String | One of the abbreviated altitude mode options: `'CTG'`, `'RTG'`, `'ABS'` (Default = `'CTG'`) |
+| altitude_mode     | String | One of the abbreviated altitude mode options: `CTG`, `RTG`, `ABS` (Default = `CTG`) |
 | style_to_use      | String | The name of the line_style()` to be used (Default = `None`). |
-| hidden            | Bool   | A value of `'True'` or `'False'` where `'False'` means that the point will be visible. (Default = `'False'`). |
+| hidden            | Bool   | A value of `True` or `True` where `True` means that the point will be visible. (Default = `True`). |
 | follow_terrain    | Bool   | Determines whether or not segments of the polygon will follow terrain and curve of the Earth. (Default = `True`). |
 | extrude_to_ground | Bool   | Determines whether or not the vertices of the polygon are extruded toward the center of the Earth's center. (Default = `False`). |
 
