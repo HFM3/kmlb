@@ -16,7 +16,6 @@
 - Lines & Polylines
 - Polygons (2D + 3D)
 - Folders
-- Web links
 
 ### Customize:
 
@@ -28,7 +27,7 @@
 
 ## Example Use
 
-**Writing a Basic KML file:**
+**Writing a Basic KML file with KMLB:**
 
 ```python
 import kmlb
@@ -44,7 +43,7 @@ kmlb.kml('Boston Fountain',  # KML name
 
 ```
 
-**Creating a Custom KML file:**
+**Creating a Customized KML file with KMLB:**
 
 ```python
 import kmlb
@@ -53,14 +52,19 @@ import kmlb
 pt_style = kmlb.point_style('Red Triangle',  # Point style name
                             'http://maps.google.com/mapfiles/kml/shapes/triangle.png',  # Icon
                             ('#ff0000', 100),  # Icon color
-                            1.0)  # Icon scale
+                            1.0,  # Icon scale
+                            ('#ffffff', 100),  # Label color
+                            1.0  # Label size
+                            )
 
 # CREATING A POINT
 coords = [-71.053568, 42.359053, 151]
 name = 'Custom House Tower'
 attribute_titles = ['City', 'Building', 'Height (M)']
 attributes = ['Boston', 'Custom House Tower', '151']
-clock_tower = kmlb.point(coords, name, attribute_titles, attributes, 'RTG', 'Red Triangle')
+altitude_mode = 'RTG'  # 'Relative To Ground'
+style_to_use = 'Red Triangle'
+clock_tower = kmlb.point(coords, name, attribute_titles, attributes, altitude_mode, style_to_use)
 
 # WRITE KML FILE
 kmlb.kml('Boston Clock Tower',  # Name
