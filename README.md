@@ -8,17 +8,27 @@
 
 # KMLB
 
-## Google Earth KML Builder
+## A Straightforward Google Earth KML Builder
 
-A straightforward KML building package that creates:
+### Create KML files that contain:
 
 - Placemarks
 - Lines & Polylines
 - Polygons (2D + 3D)
+- Folders
+- Web links
+
+### Customize:
+
+- Colors
+- Labels
+- Icons
+- Coordinates
+- Elevations
 
 ## Example Use
 
-**Writing a KML file:**
+**Writing a Basic KML file:**
 
 ```python
 import kmlb
@@ -34,7 +44,7 @@ kmlb.kml('Boston Fountain',  # KML name
 
 ```
 
-**Creating a KML file with a fully customized point:**
+**Creating a Custom KML file:**
 
 ```python
 import kmlb
