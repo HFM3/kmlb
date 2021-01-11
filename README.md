@@ -10,12 +10,28 @@ A straightforward KML building package that creates:
 
 ## Example Use
 
-Writing a KML file
+**Writing a KML file:**
 
 ```python
 import kmlb
 
-# DEFINING STYLE
+# CREATING A POINT
+fountain = kmlb.point([-71.051904, 42.358988, 0], 'Rings Fountain')
+
+# WRITE KML FILE
+kmlb.kml('Boston Fountain',  # KML name
+         [fountain],  # Features
+         r'C:\Users\UserName\Desktop\KMLB_Tutorial.kml',  # Export path
+         )
+
+```
+
+**Creating a KML file with a fully customized point:**
+
+```python
+import kmlb
+
+# DEFINING A STYLE
 pt_style = kmlb.point_style('Red Triangle',  # Point style name
                             'http://maps.google.com/mapfiles/kml/shapes/triangle.png',  # Icon
                             ('#ff0000', 100),  # Icon color
@@ -29,11 +45,11 @@ attributes = ['Boston', 'Custom House Tower', '151']
 clock_tower = kmlb.point(coords, name, attribute_titles, attributes, 'RTG', 'Red Triangle')
 
 # WRITE KML FILE
-kmlb.kml('Created with KMLB',  # Name
-         [pt_style]  # Styles to include
+kmlb.kml('Boston Clock Tower',  # Name
          [clock_tower],  # Features to include
-         r'C:\Users\UserName\Desktop\KMLB_Tutorial.kml',  # Export path
-         'KML Tutorial Shapes'  # KML Description
+         r'C:\Users\User_Name\Desktop\KMLB_Tutorial.kml',  # Export path
+         'Created with KMLB Python Package',  # KML Description
+         [pt_style],  # Styles to include
          )
 
 ```
@@ -79,7 +95,7 @@ point(coords, name, headers=[], attributes=[], altitude_mode="CTG", style_to_use
 
 #### About a Point
 
-The first thing that is needed to define a `point() ` is a **coordinate set** that marks the location where the point is to be mapped. A coordinate set contains three values: X, Y, Z
+The first thing that is needed to define a `point()` is a **coordinate set** that marks the location where the point is to be mapped. A coordinate set contains three values: X, Y, Z
 
 - X = Longitude in decimal degrees
 - Y = Latitude in decimal degrees
@@ -622,7 +638,7 @@ Create a folder to hold loose KLM geometry elements or other folders.
 `kml()`
 
 ```python
-kml(name, styles, features, path, description='', collapsed=True)
+kml(name, features, path, description='', styles=None, collapsed=True)
 ```
 
 #### Parameters:
@@ -632,7 +648,6 @@ kml(name, styles, features, path, description='', collapsed=True)
 | Parameter | Type   | Description                                                  |
 | :-------- | :----- | :----------------------------------------------------------- |
 | name      | String | The name of the KML. Note: this is not the KML's file name, but rather the name that will appear within the map. |
-| styles    | List   | A list of styles to be written to and used within the KML.   |
 | features  | List   | A list of feature to be written to the KML. The list of features can include points, lines, polygons, and folders. |
 | path      | String | The path to the folder where the KML file will be written to. Necessary folders will be created of they do not exist. The KML's file name is defined in the path. Note: The file path should end `.kml` |
 
@@ -643,6 +658,7 @@ The default fill color of a polygon is a light transparent blue with a solid yel
 | Parameter   | Type   | Description                                                  |
 | ----------- | ------ | ------------------------------------------------------------ |
 | description | String | A small body of descriptive text for the KML file.           |
+| styles      | List   | A list of styles to be written to and used within the KML.   |
 | collapsed   | Bool   | Sets the root KML folder to either be open or collapsed by default.  `False` = Folder is open/expanded. (Default = `True`) |
 
 #### Return
@@ -728,13 +744,11 @@ greenway_park = kmlb.polygon(coords, name, attribute_titles, attributes, style_t
 f = kmlb.folder('Boston Shapes', [clock_tower, walking_path, greenway_park], 'Sample Shapes')
 
 # WRTIE KML FILE
-kmlb.kml('Created with KMLB',  # Name
-         [pt_style,  # Custom point style
-          ln_style,  # Custom line style
-          poly_style],  # Custom polygon style
-         [f],  # Folder containing shapes
+kmlb.kml('Created with KMLB',  # KML name
+         [f],  # Features (Folder containing shapes)
          r'C:\Users\UserName\Desktop\KMLB_Tutorial.kml',  # Export path
-         'KML Tutorial Shapes'  # KML Description
+         'KML Tutorial Shapes',  # KML Description
+         [pt_style, ln_style, poly_style],  # Custom styles
          )
 
 ```

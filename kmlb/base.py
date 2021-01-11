@@ -679,7 +679,7 @@ def folder(name, loose_items, description='', collapsed=True, hidden=True):
     return new_folder
 
 
-def kml(name, styles, features, path, description='', collapsed=True):
+def kml(name, features, path, description='', styles=None, collapsed=True):
     """
     Creates a KML string.
 
@@ -689,8 +689,6 @@ def kml(name, styles, features, path, description='', collapsed=True):
     INPUTS:
         name (String):
             The name of the KML
-        styles (List):
-            A list of the defined style object to include in the KML
         features (List):
             A list of the defined point, line, polygon, and/or folder objects to include in the KML
         path (String):
@@ -699,6 +697,8 @@ def kml(name, styles, features, path, description='', collapsed=True):
             Note: The file path should end '.kml'
         description (String) [Optional]:
                 A small body of descriptive text for the folder.
+        styles (List) [Optional]:
+            A list of the defined style object to include in the KML
         collapsed (Bool) [Optional]:
                 True = Root folder is collapsed.
                 False = Root folder is open/expanded.
@@ -709,10 +709,10 @@ def kml(name, styles, features, path, description='', collapsed=True):
     Parameters
     ----------
     name : str
-    styles : list
     features : list
     path : str
     description : str, optional
+    styles : list, optional
     collapsed : bool, optional
 
     """
@@ -729,8 +729,10 @@ def kml(name, styles, features, path, description='', collapsed=True):
 
     ET.SubElement(body, "open").text = str(collapsed)
 
-    for style in styles:
-        ET.Element.append(body, style)
+    if styles is not None:
+        for style in styles:
+            ET.Element.append(body, style)
+
     for item in features:
         ET.Element.append(body, item)
 
