@@ -1,3 +1,11 @@
+<div align="center">
+  <img src="https://raw.githubusercontent.com/HFM3/kmlb/main/images/logo/KMLB.png" width="40%"><br>
+</div>
+
+
+---
+![PyPI](https://img.shields.io/pypi/v/kmlb?label=PyPi) ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/kmlb?label=Python) ![PyPI - License](https://img.shields.io/pypi/l/kmlb?label=License)
+
 # KMLB
 
 ## Google Earth KML Builder
