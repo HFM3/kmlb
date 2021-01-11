@@ -1,76 +1,9 @@
 """
 Functions for creating KML files.
-
-Example
--------
->>> # This example runs through creating a KML of Fenwy PArk in Boston, MA.
->>> # 1) Define Styles
->>> # 2) Define Geometries (Point, Line, Polygon)
->>> # 3) Add Geometries to folder
->>> # 4) Create KML string
-
->>> import kmlb
-
->>> # DEFINE STYLES
->>> # point style
->>> hp_style = kmlb.point_style('Bases Style', 'http://maps.google.com/mapfiles/kml/shapes/placemark_square.png', ('#f2392c', 100))
-
->>> # line style
->>> wt_style = kmlb.line_style('Warning Track Style', ('#0ff563', 100))
-
->>> # polygon style
->>> ba_style = kmlb.polygon_style('Bases Area Style')
-
->>> # CREATE A POINT
->>> pt_coordinates = [-71.097769, 42.346249, 0]  # [Longitude, Latitude, Elevation]
->>> point_name = 'Home Plate'
->>> pt_property_titles = ['City', 'Park', 'Base']
->>> pt_properties = ['Boston', 'Fenway', 'Home']
->>> style_name = 'Bases Style'  # Would be defined ahead of time with 'point_style' function.
->>> home_plate = kmlb.point(pt_coordinates, point_name, pt_property_titles, pt_properties, 'CTG', style_name)
-
->>> # CREATE A POLYLINE
->>> warning_track_boundary_coords = [[-71.097727, 42.346729, 0],\
-                                     [-71.097721, 42.347030, 0],\
-                                     [-71.097023, 42.347030, 0],\
-                                     [-71.096694, 42.346892, 0],\
-                                     [-71.096457, 42.346414, 0],\
-                                     [-71.096499, 42.346359, 0],\
-                                     [-71.096695, 42.346306, 0],\
-                                     [-71.096971, 42.346287, 0]]
-
->>> pl_property_titles = ['City', 'Park', 'Line']
->>> pl_properties = ['Boston', 'Fenway', 'Warning track']
->>> wt = kmlb.line(warning_track_boundary_coords, 'Warning Track', pl_property_titles, pl_properties, style_to_use='Warning Track Style')
-
->>> # CREATE A POLYGON
->>> bases = [[-71.097769, 42.346249, 0],\
-             [-71.097440, 42.346251, 0],\
-             [-71.097441, 42.346496, 0],\
-             [-71.097772, 42.346491, 0],\
-             [-71.097769, 42.346249, 0]]
-
->>> # Hole for pitcher's mound
->>> mound = [[-71.097656, 42.346331, 0],\
-             [-71.097580, 42.346331, 0],\
-             [-71.097580, 42.346387, 0],\
-             [-71.097656, 42.346387, 0],\
-             [-71.097656, 42.346331, 0]]
-
->>> poly_coordinates = [bases, mound]
->>> poly_property_titles = ['City', 'Park', 'Description']
->>> poly_properties = ['Boston', 'Fenway', 'Area inside of bases']
->>> bases_area = kmlb.polygon(poly_coordinates, 'Bases Area', poly_property_titles, poly_properties, style_to_use='Bases Area Style')
-
->>> # CREATE / POPULATE A FOLDER
->>> fenway = kmlb.folder('Fenway Park', [home_plate, wt, bases_area], 'Sample placemarks.')
-
->>> # CREATE KML STRING
->>> k = kmlb.kml('Fenway Park', [hp_style, wt_style, ba_style], [fenway])
-
 """
 
 import xml.etree.ElementTree as ET
+from pathlib import Path
 
 
 def altitude_modes(altitude_mode='CTG'):
@@ -174,7 +107,7 @@ def kml_color(hex6_color, opacity=100):
     return kml_color_code
 
 
-def point(coords, name, headers, attributes, altitude_mode="CTG", style_to_use=None, hidden=False):
+def point(coords, name, headers=None, attributes=None, altitude_mode="CTG", style_to_use=None, hidden=False):
     """
     Creates a KML point marker.
 
@@ -186,9 +119,9 @@ def point(coords, name, headers, attributes, altitude_mode="CTG", style_to_use=N
             A list of x, y, z coordinates as [x, y, z].
         name (String):
             The name to be given to the point.
-        headers (List of Strings):
+        headers (List of Strings) [Optional]:
             A list of titles (headers) to the attributes of the point feature.
-        attributes (List of Strings):
+        attributes (List of Strings) [Optional]:
             A list of the properties (attributes) of the point.
         altitude_mode (String) [Optional]:
             An abbreviated altitude mode ('CTG', 'RTG', 'ABS') (Default = 'CTG').
@@ -213,19 +146,7 @@ def point(coords, name, headers, attributes, altitude_mode="CTG", style_to_use=N
 
     Returns
     -------
-    object
-
-    Example
-    -------
-    A point marking home plate at Fenway Park in Boston, MA.
-
-    >>> coordinates = [-71.097769, 42.346249, 0]  # [Longitude, Latitude, Elevation]
-    >>> point_name = 'Home Plate'
-    >>> property_titles = ['City', 'Park', 'Base']
-    >>> properties = ['Boston', 'Fenway', 'Home']
-    >>> style_name = 'Bases Style'  # Would be defined ahead of time with 'point_style' function.
-
-    >>> home_plate = point(coordinates, point_name, property_titles, properties, 'CTG', style_name)
+    placemark : object
 
     """
 
@@ -244,6 +165,11 @@ def point(coords, name, headers, attributes, altitude_mode="CTG", style_to_use=N
         ET.SubElement(placemark, "styleUrl").text = str(style_to_use)
 
     # Format attributes for KML description balloon
+    if headers is None:
+        headers = []
+    if attributes is None:
+        attributes = []
+
     attribute_str = ''
     for cell in range(len(headers)):
         attribute_str += "<b>" + str(headers[cell]) + "</b>: " + str(attributes[cell]) + "<br>"
@@ -268,7 +194,7 @@ def point(coords, name, headers, attributes, altitude_mode="CTG", style_to_use=N
     return placemark
 
 
-def line(coords, name, headers, attributes, altitude_mode="CTG",
+def line(coords, name, headers=None, attributes=None, altitude_mode="CTG",
          style_to_use=None, hidden=False, follow_terrain=True, extrude_to_ground=False):
     """
     Creates a KML line/polyline.
@@ -281,9 +207,9 @@ def line(coords, name, headers, attributes, altitude_mode="CTG",
             A list of the coordinate sets [x, y, z] comprising the line.
         name (String):
             The name to be given to the line.
-        headers (List of Strings):
+        headers (List of Strings) [Optional]:
             A list of titles (headers) to the attributes of the point feature.
-        attributes (List of Strings):
+        attributes (List of Strings) [Optional]:
             A list of the properties (attributes) of the point.
         altitude_mode (String) [Optional]:
             An abbreviated altitude mode ('CTG', 'RTG', 'ABS') (Default = 'CTG').
@@ -318,25 +244,7 @@ def line(coords, name, headers, attributes, altitude_mode="CTG",
 
     Returns
     -------
-    object
-
-    Example
-    -------
-    A line marking the warning track boundary at Fenway Park in Boston, MA.
-
-   >>> warning_track_boundary_coords = [[-71.097727, 42.346729, 0],\
-                                        [-71.097721, 42.347030, 0],\
-                                        [-71.097023, 42.347030, 0],\
-                                        [-71.096694, 42.346892, 0],\
-                                        [-71.096457, 42.346414, 0],\
-                                        [-71.096499, 42.346359, 0],\
-                                        [-71.096695, 42.346306, 0],\
-                                        [-71.096971, 42.346287, 0]]
-
-    >>> property_titles = ['City', 'Park', 'Line']
-    >>> properties = ['Boston', 'Fenway', 'Warning track']
-
-    >>> wt = line(warning_track_boundary_coords, 'Warning Track', property_titles, properties, style_to_use='Warning Track Style')
+    placemark : object
 
     """
 
@@ -355,6 +263,11 @@ def line(coords, name, headers, attributes, altitude_mode="CTG",
         ET.SubElement(placemark, "styleUrl").text = '#' + str(style_to_use)
 
     # Format attributes for KML description balloon
+    if headers is None:
+        headers = []
+    if attributes is None:
+        attributes = []
+
     attribute_str = ''
     for cell in range(len(headers)):
         attribute_str += "<b>" + str(headers[cell]) + "</b>: " + str(attributes[cell]) + "<br>"
@@ -394,7 +307,7 @@ def line(coords, name, headers, attributes, altitude_mode="CTG",
     return placemark
 
 
-def polygon(coords, name, headers, attributes, altitude_mode="CTG",
+def polygon(coords, name, headers=None, attributes=None, altitude_mode="CTG",
             style_to_use=None, hidden=False, follow_terrain=True, extrude_to_ground=False):
     """Creates a KML element of a polygon.
 
@@ -410,9 +323,9 @@ def polygon(coords, name, headers, attributes, altitude_mode="CTG",
             A list of linear rings containing coordinates that comprise the polygon.
         name (String):
             The name to be given to the line.
-        headers (List of Strings):
+        headers (List of Strings) [Optional]:
             A list of titles (headers) to the attributes of the point feature.
-        attributes (List of Strings):
+        attributes (List of Strings) [Optional]:
             A list of the properties (attributes) of the point.
         altitude_mode (String) [Optional]:
             An abbreviated altitude mode ('CTG', 'RTG', 'ABS') (Default = 'CTG').
@@ -445,36 +358,7 @@ def polygon(coords, name, headers, attributes, altitude_mode="CTG",
 
     Returns
     -------
-    object
-
-    Notes
-    -----
-    To close polygon, last coordinate set is a duplicate of first coordinate set.
-
-    Example
-    -------
-    A polygon marking the area between the bases at Fenway Park in Boston, MA.
-
-    >>> # Bases polygon
-    >>> bases = [[-71.097769, 42.346249, 0],\
-                 [-71.097440, 42.346251, 0],\
-                 [-71.097441, 42.346496, 0],\
-                 [-71.097772, 42.346491, 0],\
-                 [-71.097769, 42.346249, 0]]
-
-    >>> # Hole for pitcher's mound
-    >>> mound = [[-71.097656, 42.346331, 0],\
-                 [-71.097580, 42.346331, 0],\
-                 [-71.097580, 42.346387, 0],\
-                 [-71.097656, 42.346387, 0],\
-                 [-71.097656, 42.346331, 0]]
-
-    >>> coordinates = [bases, mound]
-
-    >>> property_titles = ['City', 'Park', 'Description']
-    >>> properties = ['Boston', 'Fenway', 'Area inside of bases']
-
-    >>> bases_area = polygon(coordinates, 'Bases Area', property_titles, properties, style_to_use='Bases Area Style')
+    placemark : object
 
     """
 
@@ -493,6 +377,11 @@ def polygon(coords, name, headers, attributes, altitude_mode="CTG",
         ET.SubElement(placemark, "styleUrl").text = '#' + str(style_to_use)
 
     # Format attributes for KML description balloon
+    if headers is None:
+        headers = []
+    if attributes is None:
+        attributes = []
+
     attribute_str = ''
     for cell in range(len(headers)):
         attribute_str += "<b>" + str(headers[cell]) + "</b>: " + str(attributes[cell]) + "<br>"
@@ -592,18 +481,11 @@ def point_style(name, icon="http://maps.google.com/mapfiles/kml/shapes/placemark
 
     Returns
     -------
-    object
+    style : object
 
     Notes
     -----
     Icons: http://kml4earth.appspot.com/icons.html
-
-    Example
-    -------
-
-    Point style for home plate (Red square icon style)
-
-    >>> hp_style = point_style('Bases Style', 'http://maps.google.com/mapfiles/kml/shapes/placemark_square.png', ('#f2392c', 100))
 
     """
     style = ET.Element("Style", id=name)
@@ -641,7 +523,7 @@ def line_style(name, color=('#ff0000', 100), width=3.0, extrude_color=('#34c9eb'
         width (Float) [Optional]:
             Line thickness.
         extrude_color (Tuple) [Optional]:
-            Defines the color and opacity of the area below the line to use.
+            Defines the color and opacity of the area below the line.
             A tuple containing color and opactiy repsectively.
             Color is defined with a hex color code.
             Opacity is defined with an integer between 0(min) and 100(max).
@@ -660,12 +542,7 @@ def line_style(name, color=('#ff0000', 100), width=3.0, extrude_color=('#34c9eb'
 
     Returns
     -------
-    object
-
-    Example
-    -------
-    warning track line style (Green Line)
-    >>> wt_style = line_style('Warning Track Style', ('#0ff563', 100))
+    style : object
 
     """
 
@@ -681,7 +558,7 @@ def line_style(name, color=('#ff0000', 100), width=3.0, extrude_color=('#34c9eb'
     return style
 
 
-def polygon_style(name, fill_color=('#03cafc', 40), outline_color=('#fcdf03', 100), outline_width=1.0,):
+def polygon_style(name, fill_color=('#03cafc', 40), outline_color=('#fcdf03', 100), outline_width=3.0):
     """
     Defines a KML polygon style.
 
@@ -719,13 +596,7 @@ def polygon_style(name, fill_color=('#03cafc', 40), outline_color=('#fcdf03', 10
 
     Returns
     -------
-    object
-
-    Example
-    -------
-    Create a polygon style with default styling
-
-    >>> ba_style = polygon_style('Bases Area Style')
+    style : object
 
     """
 
@@ -752,7 +623,7 @@ def folder(name, loose_items, description='', collapsed=True, hidden=True):
         name (String):
             The name of the folder to be created.
         loose_items (List):
-            A list of loose item to include in the new folder.
+            A list of loose items to include in the new folder.
         description (String) [Optional]:
             A small body of descriptive text for the folder.
         collapsed (Bool) [Optional]:
@@ -761,10 +632,10 @@ def folder(name, loose_items, description='', collapsed=True, hidden=True):
         hidden (Bool) [Optional]:
             True = Folder is hidden.
             False = Folder is visible.
-                Note: A folder's visibility is set by the visibility of the contents within. The default is to have
-                folders hidden so that empty folders are not visible. If an item gets added to a folder and the item
-                is set to be visible, the containing folder will become visible as well - even if if the folder set to
-                hidden.
+                Note: A folder's visibility is ultimately determined by the visibility of the contents within. The
+                default is to have folders set to hidden so that empty folders are not visible. If an item gets added
+                to a folder and that item is set to be visible, the containing folder will become visible as well -
+                even if the folder set to hidden. (Default = `True`)
 
     OUTPUT:
         new_folder (Object):
@@ -780,11 +651,7 @@ def folder(name, loose_items, description='', collapsed=True, hidden=True):
 
     Returns
     -------
-    object
-
-    Examples
-    --------
-    >>> fenway = folder('Fenway Park', [home_plate, wt, bases_area], 'Sample placemarks.')
+    new_folder : object
 
     """
 
@@ -812,7 +679,7 @@ def folder(name, loose_items, description='', collapsed=True, hidden=True):
     return new_folder
 
 
-def kml(name, styles, features, description='', collapsed=True):
+def kml(name, features, path, description='', styles=None, collapsed=True):
     """
     Creates a KML string.
 
@@ -822,35 +689,31 @@ def kml(name, styles, features, description='', collapsed=True):
     INPUTS:
         name (String):
             The name of the KML
-    styles (List):
-        A list of the defined style object to include in the KML
-    features (List):
-        A list of the defined point, line, polygon, and/or folder objects to include in the KML
-    description (String) [Optional]:
-            A small body of descriptive text for the folder.
-    collapsed (Bool) [Optional]:
-            True = Root folder is collapsed.
-            False = Root folder is open/expanded.
+        features (List):
+            A list of the defined point, line, polygon, and/or folder objects to include in the KML
+        path (String):
+            The path to the folder where the KML file will be written to. The KML's file name is defined in the path.
+            Necessary folders will be created of they do not exist.
+            Note: The file path should end '.kml'
+        description (String) [Optional]:
+                A small body of descriptive text for the folder.
+        styles (List) [Optional]:
+            A list of the defined style object to include in the KML
+        collapsed (Bool) [Optional]:
+                True = Root folder is collapsed.
+                False = Root folder is open/expanded.
 
     OUTPUT:
-        kml_string (String):
-            A string representation of the XML that forms the KML.
+        None
 
     Parameters
     ----------
     name : str
-    styles : list
     features : list
+    path : str
     description : str, optional
+    styles : list, optional
     collapsed : bool, optional
-
-    Returns
-    -------
-    str
-
-    Examples
-    --------
-    >>> k = kml('Fenway Park', [hp_style, wt_style, bases_area_style], [fenway])
 
     """
 
@@ -866,12 +729,18 @@ def kml(name, styles, features, description='', collapsed=True):
 
     ET.SubElement(body, "open").text = str(collapsed)
 
-    for style in styles:
-        ET.Element.append(body, style)
+    if styles is not None:
+        for style in styles:
+            ET.Element.append(body, style)
+
     for item in features:
         ET.Element.append(body, item)
 
     kml_string = '<?xml version="1.0" encoding="UTF-8"?>'
     kml_string += ET.tostring(kml_doc, encoding='unicode', method='xml')
 
-    return kml_string
+    filepath = Path(path)
+    filepath.parent.mkdir(parents=True, exist_ok=True)
+
+    with filepath.open("w", encoding="utf-8") as f:
+        f.write(kml_string)
