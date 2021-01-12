@@ -87,7 +87,7 @@ Defines a KML point element.
 `point()`
 
 ```python
-point(coords, name, headers=[], attributes=[], altitude_mode="CTG", style_to_use=None, hidden=False)
+point(coords, name, headers=None, attributes=None, altitude_mode="CTG", style_to_use=None, hidden=False)
 ```
 
 #### Parameters:
@@ -167,7 +167,7 @@ Defines a KML line element.
 `line()`
 
 ```python
-line(coords, name, headers=[], attributes=[], altitude_mode="CTG", style_to_use=None, hidden=False, follow_terrain=True, extrude_to_ground=False)
+line(coords, name, headers=None, attributes=None, altitude_mode="CTG", style_to_use=None, hidden=False, follow_terrain=True, extrude_to_ground=False)
 ```
 
 #### Parameters:
@@ -250,7 +250,7 @@ Defines a KML polygon element.
 `polygon()`
 
 ```python
-polygon(coords, name, headers=[], attributes=[], altitude_mode="CTG", style_to_use=None, hidden=False, follow_terrain=True, extrude_to_ground=False)
+polygon(coords, name, headers=None, attributes=None, altitude_mode="CTG", style_to_use=None, hidden=False, follow_terrain=True, extrude_to_ground=False)
 ```
 
 #### Parameters:
