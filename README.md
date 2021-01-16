@@ -117,7 +117,7 @@ point(coords, name, headers=None, attributes=None, altitude_mode="CTG", style_to
 
 #### About a Point
 
-The first thing that is needed to define a `point()` is a **coordinate set** that marks the location where the point is to be mapped. A coordinate set contains three values: X, Y, Z
+The first thing that is needed to define a `point()` is a **coordinate set** that marks the location of where the point is to be mapped. A coordinate set contains three values: X, Y, Z
 
 - X = Longitude in decimal degrees
 - Y = Latitude in decimal degrees
@@ -131,7 +131,7 @@ When the point is clicked on in the map, additional information can be displayed
 | :----: | :----------------: | :--------: |
 | Boston | Custom House Tower |    151     |
 
-The **altitude mode** (optional) defines the way the z-coordinate (height) is defined. When no altitude mode is given, "CTG" is used.
+The **altitude mode** (optional) defines the way the z-coordinate (height) is mapped. When no altitude mode is given, "CTG" is used as the default.
 
 - **CTG** = Clamp to Ground. Ignores any altitude value and places the feature on the surface of the ground.
 - **RTG** = Relative to Ground. Measures the altitude from the ground level directly below the coordinates.
@@ -403,7 +403,7 @@ The default style of a point is a yellow circle with a white label.
 
 #### About a Point's Style
 
-Each defined style requires a name that is unique to the KML document being created. Every other `point_style()` parameter is optional when creating a point style. The default style a yellow circle with a white label.
+Each defined style requires a name that is unique to the KML document being created. Other than **name**, each  of the other `point_style()` parameters are optional when creating a point style. The default style a yellow circle with a white label.
 
 #### Example
 
@@ -476,7 +476,7 @@ The default color of a line is red with a light transparent blue extrusion color
 
 #### About a Line's Style
 
-Each defined style requires a name that is unique to the KML document being created. Every other `line_style()` parameter is optional when creating a line style. The default color of a line is red with a light transparent blue extrusion color.
+Each defined style requires a name that is unique to the KML document being created. Other than **name**, each  of the other `line_style()` parameters are optional when creating a line style. The default color of a line is red with a light transparent blue extrusion color.
 
 #### Example
 
@@ -539,7 +539,7 @@ The default fill color of a polygon is a light transparent blue with a solid yel
 
 #### About a Polygon's Style
 
-Each defined style requires a name that is unique to the KML document being created. Every other `polygon_style()` parameter is optional when creating a polygon style. The default fill color of a polygon is a light transparent blue with a solid yellow outline.
+Each defined style requires a name that is unique to the KML document being created. Other than **name**, each  of the other `polygon_style()` parameters are optional when creating a polygon style. The default fill color of a polygon is a light transparent blue with a solid yellow outline.
 #### Example
 
 A polygon with a custom style applied.
