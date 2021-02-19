@@ -38,7 +38,7 @@ fountain = kmlb.point([-71.051904, 42.358988, 0], 'Rings Fountain')
 # WRITE KML FILE
 kmlb.kml('Boston Fountain',  # KML name
          [fountain],  # Features
-         r'C:\Users\UserName\Desktop\KMLB_Tutorial.kml',  # Export path
+         r'C:\Users\UserName\Desktop\KMLB_Tutorial.kml'  # Export path
          )
 
 ```
@@ -56,7 +56,7 @@ ss = kmlb.search_poi('700 Atlantic Avenue, Boston, MA', name='South Station')
 # WRITE KML FILE
 kmlb.kml('Boston Landmarks',  # KML name
          [bos_common, ss],  # Features
-         r'C:\Users\UserName\Desktop\KMLB_Tutorial.kml',  # Export path
+         r'C:\Users\UserName\Desktop\KMLB_Tutorial.kml'  # Export path
          )
 
 ```
