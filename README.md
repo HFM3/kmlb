@@ -180,7 +180,7 @@ placemark = kmlb.point(coords, name, attribute_titles, attributes, 'RTG')
 
 ### Search POI
 
-Defines a KML point element.
+Defines a KML point element from a POI or an address search.
 
 `search_poi()`
 
