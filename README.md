@@ -27,7 +27,7 @@
 
 ## Example Use
 
-**Writing a Basic KML file using with KMLB:**
+**Writing a Basic KML file with KMLB:**
 
 ```python
 import kmlb
