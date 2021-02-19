@@ -32,12 +32,30 @@
 ```python
 import kmlb
 
-# CREATING A POINT
+# CREATE A POINT
 fountain = kmlb.point([-71.051904, 42.358988, 0], 'Rings Fountain')
 
 # WRITE KML FILE
 kmlb.kml('Boston Fountain',  # KML name
          [fountain],  # Features
+         r'C:\Users\UserName\Desktop\KMLB_Tutorial.kml',  # Export path
+         )
+
+```
+**Mapping a POI or an address with KMLB:**
+
+```python
+import kmlb
+
+# CREATE A POINT FROM A POI
+bos_common = kmlb.search_poi('Boston Common, Boston, MA')
+
+# CREATE A POINT FROM AN ADDRESS
+ss = kmlb.search_poi('700 Atlantic Avenue, Boston, MA', name='South Station')
+
+# WRITE KML FILE
+kmlb.kml('Boston Landmarks',  # KML name
+         [bos_common, ss],  # Features
          r'C:\Users\UserName\Desktop\KMLB_Tutorial.kml',  # Export path
          )
 
@@ -48,7 +66,7 @@ kmlb.kml('Boston Fountain',  # KML name
 ```python
 import kmlb
 
-# DEFINING A STYLE
+# DEFINE A STYLE
 pt_style = kmlb.point_style('Red Triangle',  # Point style name
                             'http://maps.google.com/mapfiles/kml/shapes/triangle.png',  # Icon
                             ('#ff0000', 100),  # Icon color
@@ -57,21 +75,21 @@ pt_style = kmlb.point_style('Red Triangle',  # Point style name
                             1.0  # Label size
                             )
 
-# CREATING A POINT
+# CREATE A POINT
 coords = [-71.053568, 42.359053, 151]
 name = 'Custom House Tower'
 attribute_titles = ['City', 'Building', 'Height (M)']
 attributes = ['Boston', 'Custom House Tower', '151']
 altitude_mode = 'RTG'  # 'Relative To Ground'
-style_to_use = 'Red Triangle'
+style_to_use = 'Red Triangle' # Name of point style defined earlier
 clock_tower = kmlb.point(coords, name, attribute_titles, attributes, altitude_mode, style_to_use)
 
 # WRITE KML FILE
-kmlb.kml('Boston Clock Tower',  # Name
+kmlb.kml('Boston Clock Tower',  # KML Name
          [clock_tower],  # Features to include
          r'C:\Users\UserName\Desktop\KMLB_Tutorial.kml',  # Export path
          'Created with KMLB Python Package',  # KML Description
-         [pt_style],  # Styles to include
+         [pt_style]  # Styles to include
          )
 
 ```
@@ -158,6 +176,61 @@ attributes = ['Boston', 'Custom House Tower', '151']
 
 # Define the point
 placemark = kmlb.point(coords, name, attribute_titles, attributes, 'RTG')
+```
+
+### Search POI
+
+Defines a KML point element.
+
+`search_poi()`
+
+```python
+search_poi(poi, name=None, headers=None, attributes=None, style_to_use=None, hidden=False):
+```
+
+#### Parameters:
+
+##### Required Parameters
+
+| Parameter | Type   | Description                                                  |
+| :-------- | :----- | :----------------------------------------------------------- |
+| poi       | String | The string equivalent of what would be typed into a search bar to locate a POI or an address. |
+| name      | String | The name to be given to the point feature. The name will be used for labeling. |
+
+##### Optional Parameters
+
+| Parameter    | Type   | Description                                                  |
+| ------------ | ------ | ------------------------------------------------------------ |
+| name         | String | The name to be given to the point feature. The name will be used for labeling. If no name is provided, the 'poi' argument's value will be used as the point's name. |
+| headers      | List   | A list of the attribute titles for the point feature         |
+| attributes   | List   | A list of properties for the point feature.                  |
+| style_to_use | String | The name of the `point_style()` to be used (Default = `None`). |
+| hidden       | Bool   | A value of `True` or `False` where `False` means that the point will be visible. (Default = `False`). |
+
+#### Return
+
+| Return    | Type   | Description                                  |
+| --------- | ------ | -------------------------------------------- |
+| placemark | Object | An XML element representing a KML Placemark. |
+
+#### Example
+
+Create a point from a POI and an address.
+
+```python
+import kmlb
+
+# CREATE A POINT FROM A POI
+bos_common = kmlb.search_poi('Boston Common, Boston, MA')
+
+# CREATE A POINT FROM AN ADDRESS
+ss = kmlb.search_poi('700 Atlantic Avenue, Boston, MA', name='South Station')
+
+# WRITE KML FILE
+kmlb.kml('Boston Landmarks',  # KML name
+         [bos_common, ss],  # Features
+         r'C:\Users\UserName\Desktop\KMLB_Tutorial.kml'  # Export path
+         )
 ```
 
 ### Line
@@ -711,13 +784,15 @@ ln_style = kmlb.line_style('Yellow Line', ('#fcce02', 100))
 poly_style = kmlb.polygon_style('Purple Polygon', ('#aaaaff', 60), ('#5500ff', 100), 4)
 
 # CREATING A POINT
-
 coords = [-71.053568, 42.359053, 151]
 name = 'Custom House Tower'
 attribute_titles = ['City', 'Building', 'Height (M)']
 attributes = ['Boston', 'Custom House Tower', '151']
 
 clock_tower = kmlb.point(coords, name, attribute_titles, attributes, 'RTG', 'Red Triangle')
+
+# SEARCHING A POI
+aquarium = kmlb.search_poi("New England Aquarium")
 
 # CREATING A LINE
 coords = [[-71.053266, 42.359099, 0],
@@ -763,14 +838,14 @@ attributes = ['Boston', 'Greenway']
 greenway_park = kmlb.polygon(coords, name, attribute_titles, attributes, style_to_use='Purple Polygon')
 
 # ADD GEOMETRIES TO FOLDER
-f = kmlb.folder('Boston Shapes', [clock_tower, walking_path, greenway_park], 'Sample Shapes')
+f = kmlb.folder('Boston Shapes', [clock_tower, aquarium, walking_path, greenway_park], 'Sample Shapes')
 
 # WRTIE KML FILE
 kmlb.kml('Created with KMLB',  # KML name
          [f],  # Features (Folder containing shapes)
          r'C:\Users\UserName\Desktop\KMLB_Tutorial.kml',  # Export path
          'KML Tutorial Shapes',  # KML Description
-         [pt_style, ln_style, poly_style],  # Custom styles
+         [pt_style, ln_style, poly_style]  # Custom styles
          )
 
 ```
