@@ -188,7 +188,86 @@ def point(coords, name, headers=None, attributes=None, altitude_mode="CTG", styl
     extended_data = ET.SubElement(placemark, 'ExtendedData')
     for cell in range(len(headers)):
         data = ET.SubElement(extended_data, 'Data', {'name': headers[cell]})
-        ET.SubElement(data, 'displayName').text = str(headers[cell])
+        ET.SubElement(data, 'value').text = str(attributes[cell])
+
+    return placemark
+
+
+def search_poi(poi, name=None, headers=None, attributes=None, style_to_use=None, hidden=False):
+    """
+    Creates a KML point marker from a Point of Interest (POI) or an address.
+
+    OVERVIEW:
+        Creates a KML point element that can be included in a KML document.
+
+    INPUTS:
+        poi (String):
+            The string equivalent of what would be typed into a search bar to locate a POI or an address.
+        name (String) [Optional]:
+            The name to be given to the point. If no name is provided, the 'poi' argument's value will be used as the point's name.
+        headers (List of Strings) [Optional]:
+            A list of titles (headers) to the attributes of the point feature.
+        attributes (List of Strings) [Optional]:
+            A list of the properties (attributes) of the point.
+        style_to_use (String) [Optional]:
+            The name of the point style to be used (Default = None).
+        hidden (Bool) [Optional]:
+            A value of 'True' or 'False' where 'False' means the point will be visible (Default = 'False').
+
+    OUTPUTS:
+        placemark (Object):
+            An XML element representing a KML Placemark.
+
+    Parameters
+    ----------
+    poi : str
+    name : str
+    headers : list[str]
+    attributes : list[str]
+    style_to_use : str, optional
+    hidden : bool, optional
+
+    Returns
+    -------
+    placemark : object
+
+    """
+
+    # Create placemark
+    placemark = ET.Element('Placemark')
+
+    # Set 'visibility' value
+    visibility = 1
+    if hidden is True:
+        visibility = 0
+    ET.SubElement(placemark, 'visibility').text = str(visibility)
+
+    if name is None:
+        name = poi
+    ET.SubElement(placemark, 'name').text = str(name)
+
+    # Assign style
+    if style_to_use is not None:
+        ET.SubElement(placemark, "styleUrl").text = str(style_to_use)
+
+    # Format attributes for KML description balloon
+    if headers is None:
+        headers = []
+    if attributes is None:
+        attributes = []
+
+    attribute_str = ''
+    for cell in range(len(headers)):
+        attribute_str += "<b>" + str(headers[cell]) + "</b>: " + str(attributes[cell]) + "<br>"
+    ET.SubElement(placemark, "description").text = attribute_str
+
+    # Assign address to point
+    ET.SubElement(placemark, 'address').text = str(poi)
+
+    # Create point's 'extended data' attribute table.
+    extended_data = ET.SubElement(placemark, 'ExtendedData')
+    for cell in range(len(headers)):
+        data = ET.SubElement(extended_data, 'Data', {'name': headers[cell]})
         ET.SubElement(data, 'value').text = str(attributes[cell])
 
     return placemark
@@ -301,7 +380,6 @@ def line(coords, name, headers=None, attributes=None, altitude_mode="CTG",
     extended_data = ET.SubElement(placemark, 'ExtendedData')
     for cell in range(len(headers)):
         data = ET.SubElement(extended_data, 'Data', {'name': headers[cell]})
-        ET.SubElement(data, 'displayName').text = str(headers[cell])
         ET.SubElement(data, 'value').text = str(attributes[cell])
 
     return placemark
@@ -430,7 +508,6 @@ def polygon(coords, name, headers=None, attributes=None, altitude_mode="CTG",
     extended_data = ET.SubElement(placemark, 'ExtendedData')
     for cell in range(len(headers)):
         data = ET.SubElement(extended_data, 'Data', {'name': headers[cell]})
-        ET.SubElement(data, 'displayName').text = str(headers[cell])
         ET.SubElement(data, 'value').text = str(attributes[cell])
 
     return placemark
