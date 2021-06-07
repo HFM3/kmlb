@@ -76,7 +76,7 @@ def kml_color(hex6_color, opacity=100):
             (Note: Retain the preceding "#" symbol)
 
         opacity (Integer) [optional]: A value between 0 and 100 where 0 is transparent
-            Default = 100.
+            (Default = 100)
 
     OUTPUT:
         kml_color (String):
