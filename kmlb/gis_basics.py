@@ -1,4 +1,4 @@
-from math import pi, sin, cos, sqrt, atan, atan2, tan, radians, degrees
+from math import sin, cos, sqrt, atan, atan2, tan, radians, degrees
 
 # Ellipsoid Parameters:
 
@@ -17,7 +17,7 @@ r_pm = (1-f)*r_eq
 def vicenty_inverse(p1, p2, max_iter=250, tol=10**(-12)):
     """
     OVERVIEW:
-        Iteratively calculates the distance along the surface of an ellipsoid betweeen two points.
+        Iteratively calculates the distance along the surface of an ellipsoid between two points.
 
     INPUTS:
         p1 (List of two Floats):
@@ -27,7 +27,7 @@ def vicenty_inverse(p1, p2, max_iter=250, tol=10**(-12)):
             Point 2. A list of x, y coordinates as [x, y].
             (Note: [x, y, z] coordinates can be provided, but 'z' will be ignored.)
         max_iter (Integer) [Optional]:
-            Maximumum number of iterations to run formula for if tolerance is not satisfied. (Default = 250)
+            Maximum number of iterations to run formula for if tolerance is not satisfied. (Default = 250)
         tol (float) [Optional]:
             Convergence tolerance.
             If the tolerance is larger than the difference between the longitude values calculated in the current step
@@ -148,7 +148,7 @@ def vicenty_direct(p1, init_bearing, distance_m, max_iter=250, tol=10 ** (-12)):
         distance_m (Float):
             The distance (in meters) of p2 from p1.
         max_iter (Integer) [Optional]:
-            Maximumum number of iterations to run formula for if tolerance is not satisfied. (Default = 250)
+            Maximum number of iterations to run formula for if tolerance is not satisfied. (Default = 250)
         tol (float) [Optional]:
             Convergence tolerance.
             If the tolerance is larger than the difference between the longitude values calculated in the current step
