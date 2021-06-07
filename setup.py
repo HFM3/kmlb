@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="kmlb",
-    version="0.0.3",
+    version="0.0.4",
     author="HFM3",
     description="A Straightforward Google Earth KML Builder",
     long_description=long_description,
