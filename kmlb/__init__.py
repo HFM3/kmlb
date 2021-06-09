@@ -1,2 +1,2 @@
 from .base import *
-import gis_basics
+import kmlb.gis_basics
