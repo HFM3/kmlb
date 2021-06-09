@@ -14,7 +14,7 @@ f = 1/298.257223563
 r_pm = (1-f)*r_eq
 
 
-def vicenty_inverse(p1, p2, max_iter=250, tol=10**(-12)):
+def vicenty_inverse(p1, p2, precison=3, max_iter=250, tol=10**(-12)):
     """
     OVERVIEW:
         Iteratively calculates the distance along the surface of an ellipsoid between two points.
@@ -26,6 +26,8 @@ def vicenty_inverse(p1, p2, max_iter=250, tol=10**(-12)):
         p2 (List of two Floats):
             Point 2. A list of x, y coordinates as [x, y].
             (Note: [x, y, z] coordinates can be provided, but 'z' will be ignored.)
+        precision (Integer) [Optional]:
+            Number of decimal places to reatain in the results of distance, and bearings. (Default = 3)
         max_iter (Integer) [Optional]:
             Maximum number of iterations to run formula for if tolerance is not satisfied. (Default = 250)
         tol (float) [Optional]:
@@ -46,6 +48,7 @@ def vicenty_inverse(p1, p2, max_iter=250, tol=10**(-12)):
     ----------
     p1 : list[float]
     p2 : list[float]
+    precison: int, optional
     max_iter : int, optional
     tol : float, optional
 
@@ -57,31 +60,31 @@ def vicenty_inverse(p1, p2, max_iter=250, tol=10**(-12)):
 
     """
 
-    # convert coordinate values to float
+    # Convert coordinate values to float
     p1 = [float(c) for c in p1]
     p2 = [float(c) for c in p2]
 
-    # pull lat and lng from coordinates
+    # Pull lat and lng from coordinates
     lng1, lat1 = p1[:2]
     lng2, lat2 = p2[:2]
 
-    # reduced latitudes (latitude on the auxiliary sphere)
+    # Reduced latitudes (latitude on the auxiliary sphere)
     u_1 = atan((1-f) * tan(radians(lat1)))
     u_2 = atan((1-f) * tan(radians(lat2)))
 
-    # difference in longitude of two points
+    # Difference in longitude of two points
     lng_diff = radians(lng2 - lng1)
 
-    # set initial value of lambda to lng_diff
+    # Set initial value of lambda to lng_diff
     lam = lng_diff
 
-    # pre-calculated values to make formulas shorter
+    # Pre-calculated values to make formulas shorter
     sin_u1 = sin(u_1)
     cos_u1 = cos(u_1)
     sin_u2 = sin(u_2)
     cos_u2 = cos(u_2)
 
-    # variables that will be set from inside of loop
+    # Variables that will be set from inside of loop
     sigma = None
     sin_sigma = None
     cos_sigma = None
@@ -112,7 +115,7 @@ def vicenty_inverse(p1, p2, max_iter=250, tol=10**(-12)):
         lambda_prev = lam
         lam = lng_diff + (1 - c) * f * sin_alpha * (sigma + c * sin_sigma * (cos2_sigma_m + c * cos_sigma * (-1 + 2 * cos2_sigma_m ** 2)))
 
-        # successful convergence
+        # Successful convergence
         diff = abs(lambda_prev - lam)
         if diff <= tol:
             break
@@ -123,18 +126,21 @@ def vicenty_inverse(p1, p2, max_iter=250, tol=10**(-12)):
     delta_sig = b * sin_sigma * (cos2_sigma_m + 0.25 * b * (cos_sigma * (-1 + 2 * cos2_sigma_m ** 2) - (1 / 6) * b * cos2_sigma_m * (-3 + 4 * sin_sigma ** 2) * (-3 + 4 * cos2_sigma_m ** 2)))
 
     dist_m = r_pm * a * (sigma - delta_sig)
+    dist_m = round(dist_m, precison)
 
-    init_bearing = degrees(atan2(cos_u2 * sin(lam), cos_u1 * sin_u2 - sin_u1 * cos_u2 * cos(lam)))
+    init_bearing = atan2(cos_u2 * sin(lam), cos_u1 * sin_u2 - sin_u1 * cos_u2 * cos(lam))
+    init_bearing = round(degrees(init_bearing), precison)
     if init_bearing < 0:
         init_bearing += 360
-    final_bearing = degrees(atan2(cos_u1 * sin(lam), (sin_u1 * -1) * cos_u2 + cos_u1 * sin_u2 * cos(lam)))
+    final_bearing = atan2(cos_u1 * sin(lam), (sin_u1 * -1) * cos_u2 + cos_u1 * sin_u2 * cos(lam))
+    final_bearing = round(degrees(final_bearing), precison)
     if final_bearing < 0:
         final_bearing += 360
 
     return dist_m, init_bearing, final_bearing
 
 
-def vicenty_direct(p1, init_bearing, distance_m, max_iter=250, tol=10 ** (-12)):
+def vicenty_direct(p1, init_bearing, distance_m, precision=3, max_iter=250, tol=10 ** (-12)):
     """
     OVERVIEW:
         Iteratively calculates the final coordinates (p2) of a line when given a starting point (p1), azimuth, and distance.
@@ -147,6 +153,8 @@ def vicenty_direct(p1, init_bearing, distance_m, max_iter=250, tol=10 ** (-12)):
             The forward azimuth from p1 (in degrees from geographic north).
         distance_m (Float):
             The distance (in meters) of p2 from p1.
+        precision (Integer) [Optional]:
+            Number of decimal places to reatain of the final bearing. (Default = 3)
         max_iter (Integer) [Optional]:
             Maximum number of iterations to run formula for if tolerance is not satisfied. (Default = 250)
         tol (float) [Optional]:
@@ -167,6 +175,7 @@ def vicenty_direct(p1, init_bearing, distance_m, max_iter=250, tol=10 ** (-12)):
     p1 : list[float]
     init_bearing : float
     distance_m : float
+    precision: int, optional
     max_iter : int, optional
     tol : float, optional
 
@@ -177,16 +186,17 @@ def vicenty_direct(p1, init_bearing, distance_m, max_iter=250, tol=10 ** (-12)):
 
     """
 
+    # Pull lat and lng from coordinates as floats
     p1 = [float(c) for c in p1]
-    p1_x, p1_y, p1_z = p1[:3]
+    p1_x, p1_y = p1[:2]
 
     init_bearing = radians(init_bearing)
 
-    # pull lat and lng from coordinates
+    # Convert lat and lng to radians
     p1_x_rads = radians(p1_x)
     p1_y_rads = radians(p1_y)
 
-    # pre-calculated values to make formulas shorter
+    # Pre-calculated values to make formulas shorter
     tan_u1 = (1 - f) * tan(p1_y_rads)
     cos_u1 = 1 / sqrt(1 + tan_u1**2)
     sin_u1 = tan_u1 * cos_u1
@@ -224,8 +234,11 @@ def vicenty_direct(p1, init_bearing, distance_m, max_iter=250, tol=10 ** (-12)):
     p2_x_rads = p1_x_rads + p
     final_bearing = atan2(sin_alpha, (-1 * (sin_u1 * sin(sigma) - cos_u1 * cos(sigma) * cos(init_bearing))))
 
-    p2 = [degrees(p2_x_rads), degrees(p2_y_rads), p1_z]
-    final_bearing = degrees(final_bearing)
+    p2 = [degrees(p2_x_rads), degrees(p2_y_rads)]
+    final_bearing = round(degrees(final_bearing), precision)
+
+    if final_bearing < 0:
+        final_bearing += 360
 
     return p2, final_bearing
 
