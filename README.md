@@ -256,10 +256,10 @@ line(coords, name, headers=None, attributes=None, altitude_mode="CTG", style_to_
 
 | Parameter         | Type   | Description                                                  |
 | ----------------- | ------ | ------------------------------------------------------------ |
-| headers           | List   | A list of the attribute titles for the point feature         |
-| attributes        | List   | A list of properties for the point feature.                  |
+| headers           | List   | A list of the attribute titles for the line feature          |
+| attributes        | List   | A list of properties for the line feature.                   |
 | altitude_mode     | String | One of the abbreviated altitude mode options: `CTG`, `RTG`, `ABS` (Default = `CTG`) |
-| style_to_use      | String | The name of the line_style()` to be used (Default = `None`). |
+| style_to_use      | String | The name of the `line_style()` to be used (Default = `None`). |
 | hidden            | Bool   | A value of `True` or `True` where `True` means that the point will be visible. (Default = `True`). |
 | follow_terrain    | Bool   | Determines whether or not the line will follow terrain and curve of the Earth. (Default = `True`). |
 | extrude_to_ground | Bool   | Determines whether or not the vertices of the line are extruded toward the center of the Earth's center. (Default = `False`). |
@@ -330,19 +330,19 @@ polygon(coords, name, headers=None, attributes=None, altitude_mode="CTG", style_
 
 ##### Required Parameters
 
-| Parameter | Type   | Description                                                |
-| :-------- | :----- | :--------------------------------------------------------- |
-| coords    | List   | A list of coordinate sets : `[[X1, Y1, Z1], [X2, Y2, Z2]]` |
-| name      | String | The name to be given to the line feature.                  |
+| Parameter | Type   | Description                                                  |
+| :-------- | :----- | :----------------------------------------------------------- |
+| coords    | List   | A list of coordinate sets that form rings (outer/inner rings). |
+| name      | String | The name to be given to the polygon feature.                 |
 
 ##### Optional Parameters
 
 | Parameter         | Type   | Description                                                  |
 | ----------------- | ------ | ------------------------------------------------------------ |
-| headers           | List   | A list of the attribute titles for the point feature         |
-| attributes        | List   | A list of properties for the point feature.                  |
+| headers           | List   | A list of the attribute titles for the polygon feature       |
+| attributes        | List   | A list of properties for the polygon feature.                |
 | altitude_mode     | String | One of the abbreviated altitude mode options: `CTG`, `RTG`, `ABS` (Default = `CTG`) |
-| style_to_use      | String | The name of the line_style()` to be used (Default = `None`). |
+| style_to_use      | String | The name of the `polygon_style()`to be used (Default = `None`). |
 | hidden            | Bool   | A value of `True` or `True` where `True` means that the point will be visible. (Default = `True`). |
 | follow_terrain    | Bool   | Determines whether or not segments of the polygon will follow terrain and curve of the Earth. (Default = `True`). |
 | extrude_to_ground | Bool   | Determines whether or not the vertices of the polygon are extruded toward the center of the Earth's center. (Default = `False`). |
@@ -355,7 +355,7 @@ polygon(coords, name, headers=None, attributes=None, altitude_mode="CTG", style_
 
 #### About a Polygon
 
-A `polygon()` is defined by a single ***outer ring*** and any number of ***inner rings***. Each *ring* is similar to a polyline, with the only difference being that the first and final coordinate set of the ring match each other. The first and final coordinate sets of each ring need to match so that the polyline *"closes"* and forms a polygon.  In this way, a tringle will be defined by four vertices or coordinates sets. Each ring must be contain at least three  distinct coordinate sets. 
+A `polygon()` is defined by a single ***outer ring*** and any number of ***inner rings***. Each *ring* is similar to a polyline, with the only difference being that the first and final coordinate set of the ring must match each other. The first and final coordinate sets of each ring need to match so that the polyline *"closes"* and forms a polygon.  In this way, a triangle will be defined by four vertices or coordinates sets. Each ring must be contain at least three  distinct coordinate sets with the first and last sets matching each other.
 
 - **Outer Ring**: Forms the exterior boundary of a polygon. A polygon can only have one outer ring defined.
 - **Inner Ring**: Forms an interior hole within a polygon's outer ring. A polygon can have any number of inner rings defined.
@@ -366,7 +366,7 @@ A polygon is structured as follows:
 Polygon = [OuterRing, InnerRing1, InnerRing2, ....]
 ```
 
-Inner rings are optional. The geometry of a polygon can be defined with a single outer ring like so:
+Inner rings are optional. The geometry of a polygon can be defined with only an outer ring like so:
 ```python
 Polygon = [OuterRing]
 ```
