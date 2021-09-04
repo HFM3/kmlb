@@ -392,9 +392,7 @@ def polygon(coords, name, headers=None, attributes=None, altitude_mode="CTG",
     Creates a KML polygon.
 
     OVERVIEW:
-        Creates a KML line/polyline element that can be included in a KML document.
-
-        A polygone is made up of 'linear rings' which are
+        Creates a KML polygon element that can be included in a KML document.
 
     INPUTS:
         coords (List of coordinate sets):

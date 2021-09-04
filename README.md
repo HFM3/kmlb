@@ -355,7 +355,7 @@ polygon(coords, name, headers=None, attributes=None, altitude_mode="CTG", style_
 
 #### About a Polygon
 
-A `polygon()` is defined by a single ***outer ring*** and any number of ***inner rings***. Each *ring* is similar to a polyline, with the only difference being that the first and final coordinate set of the ring must match each other. The first and final coordinate sets of each ring need to match so that the polyline *"closes"* and forms a polygon.  In this way, a triangle will be defined by four vertices or coordinates sets. Each ring must be contain at least three  distinct coordinate sets with the first and last sets matching each other.
+A `polygon()` is defined by a single ***outer ring*** and any number of ***inner rings***. Each *ring* is similar to a polyline, with the only difference being that the first and final coordinate set of the ring must match each other. The first and final coordinate sets of each ring need to match so that the polyline *"closes"* and forms a polygon.  In this way, a triangle will be defined by four vertices/coordinates sets. Each ring must contain at least three distinct coordinate sets with the first and last sets matching each other.
 
 - **Outer Ring**: Forms the exterior boundary of a polygon. A polygon can only have one outer ring defined.
 - **Inner Ring**: Forms an interior hole within a polygon's outer ring. A polygon can have any number of inner rings defined.
