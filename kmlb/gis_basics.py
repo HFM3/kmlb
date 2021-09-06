@@ -148,7 +148,7 @@ def vicenty_direct(p1, init_bearing, distance_m, precision=3, max_iter=250, tol=
     INPUTS:
         p1 (List of two Floats):
             Point 1. A list of x, y coordinates as [x, y].
-            (Note: [x, y, z] coordinates can be provided, but 'z' will be ignored.)
+            (Note: [x, y, z] coordinates may be provided. Z coordinate will pass through unprocessed.)
         init_bearing (Float):
             The forward azimuth from p1 (in degrees from geographic north).
         distance_m (Float):
@@ -164,7 +164,7 @@ def vicenty_direct(p1, init_bearing, distance_m, precision=3, max_iter=250, tol=
             tolerance has been achieved. (Default = 10^(-12) or 0.000 000 000 001 of a degree)
 
     OUTPUTS:
-        p2 (List of two Floats):
+        p2 (List of Floats):
             Point 2. A list of x, y coordinates as [x, y].
         final_bearing (Float):
             The final azimuth between p1 and p2 in degrees from geographic north.
@@ -235,6 +235,7 @@ def vicenty_direct(p1, init_bearing, distance_m, precision=3, max_iter=250, tol=
     final_bearing = atan2(sin_alpha, (-1 * (sin_u1 * sin(sigma) - cos_u1 * cos(sigma) * cos(init_bearing))))
 
     p2 = [degrees(p2_x_rads), degrees(p2_y_rads)]
+    p2.extend(p1[2:])
     final_bearing = round(degrees(final_bearing), precision)
 
     if final_bearing < 0:
