@@ -387,7 +387,8 @@ def line(coords, name, headers=None, attributes=None, altitude_mode="CTG",
 
 def polygon(coords, name, headers=None, attributes=None, altitude_mode="CTG",
             style_to_use=None, hidden=False, follow_terrain=True, extrude_to_ground=False):
-    """Creates a KML element of a polygon.
+    """
+    Creates a KML element of a polygon.
 
     Creates a KML polygon.
 
