@@ -107,7 +107,58 @@ def kml_color(hex6_color, opacity=100):
     return kml_color_code
 
 
-def point(coords, name, headers=None, attributes=None, altitude_mode="CTG", style_to_use=None, hidden=False):
+def look_at(coords, azimuth, tilt, distance, altitude_mode="ABS"):
+    """
+    Creates a KML 'LookAt' element to create camera angles.
+
+    INPUT:
+        coords (List of three Floats):
+            A list of x, y, z coordinates as [x, y, z].
+        azimuth (Float):
+            The direction that camera will face in degrees from 0-360.
+        tilt (Float):
+            The tilt of the camera towards the object.
+            Values range from 0 to 90 degrees.
+            A value of 0 degrees indicates viewing from directly above.
+            A value of 90 degrees indicates viewing along the horizon.
+        distance (Float):
+            Distance in meters from the point specified by 'coords'
+        altitude_mode (String) [Optional]:
+            An abbreviated altitude mode ('CTG', 'RTG', 'ABS') (Default = 'ABS').
+
+
+    OUTPUT:
+        lookat (Element):
+            A KML 'LookAt' element.
+
+    Parameters
+    ----------
+    coords : list[float]
+    azimuth : float
+    tilt : float
+    distance : float
+    altitude_mode : str, optional
+
+    Returns
+    -------
+    lookat : element
+
+    """
+
+    # Create point's coordinate string.
+    lookat = ET.Element('LookAt')
+    ET.SubElement(lookat, 'longitude').text = f"{coords[0]}"
+    ET.SubElement(lookat, 'latitude').text = f"{coords[1]}"
+    ET.SubElement(lookat, 'altitude').text = f"{coords[2]}"
+    ET.SubElement(lookat, 'heading').text = f"{azimuth}"
+    ET.SubElement(lookat, 'tilt').text = f"{tilt}"
+    ET.SubElement(lookat, 'range').text = f"{distance}"
+    ET.SubElement(lookat, 'altitudeMode').text = altitude_modes(altitude_mode)
+
+    return lookat
+
+
+def point(coords, name, headers=None, attributes=None, altitude_mode="CTG", style_to_use=None, hidden=False, camera=None):
     """
     Creates a KML point marker.
 
@@ -129,6 +180,8 @@ def point(coords, name, headers=None, attributes=None, altitude_mode="CTG", styl
             The name of the point style to be used (Default = None).
         hidden (Bool) [Optional]:
             A value of 'True' or 'False' where 'False' means the point will be visible (Default = 'False').
+        camera (Element) [Optional]:
+            A KML 'LookAt' element that defines the default camera angle to the point.
 
     OUTPUTS:
         placemark (Object):
@@ -143,6 +196,7 @@ def point(coords, name, headers=None, attributes=None, altitude_mode="CTG", styl
     altitude_mode : {'CTG', 'RTG', 'ABS'}, optional
     style_to_use : str, optional
     hidden : bool, optional
+    camera : element, optional
 
     Returns
     -------
@@ -189,6 +243,10 @@ def point(coords, name, headers=None, attributes=None, altitude_mode="CTG", styl
     for cell in range(len(headers)):
         data = ET.SubElement(extended_data, 'Data', {'name': headers[cell]})
         ET.SubElement(data, 'value').text = str(attributes[cell])
+
+    # Placemark Default Camera Angle
+    if camera is not None:
+        placemark.append(camera)
 
     return placemark
 
@@ -274,7 +332,7 @@ def search_poi(poi, name=None, headers=None, attributes=None, style_to_use=None,
 
 
 def line(coords, name, headers=None, attributes=None, altitude_mode="CTG",
-         style_to_use=None, hidden=False, follow_terrain=True, extrude_to_ground=False):
+         style_to_use=None, hidden=False, follow_terrain=True, extrude_to_ground=False, camera=None):
     """
     Creates a KML line/polyline.
 
@@ -302,6 +360,8 @@ def line(coords, name, headers=None, attributes=None, altitude_mode="CTG",
             Note: Only works when `altitude_mode` is set to 'CTG'.
         extrude_to_ground (Bool) [Optional]:
             True = Vertices of the line are extruded toward the center of the Earth's center. (Default = False).
+        camera (Element) [Optional]:
+            A KML 'LookAt' element that defines the default camera angle to the line.
 
     OUTPUT:
         placemark (Object):
@@ -320,6 +380,7 @@ def line(coords, name, headers=None, attributes=None, altitude_mode="CTG",
         True = Line will follow terrain and curve of the Earth. (Default = True).
     extrude_to_ground : bool, optional
         True = Vertices of the line are extruded toward the center of the Earth's center. (Default = False).
+    camera : element, optional
 
     Returns
     -------
@@ -382,11 +443,15 @@ def line(coords, name, headers=None, attributes=None, altitude_mode="CTG",
         data = ET.SubElement(extended_data, 'Data', {'name': headers[cell]})
         ET.SubElement(data, 'value').text = str(attributes[cell])
 
+    # Placemark Default Camera Angle
+    if camera is not None:
+        placemark.append(camera)
+
     return placemark
 
 
 def polygon(coords, name, headers=None, attributes=None, altitude_mode="CTG",
-            style_to_use=None, hidden=False, follow_terrain=True, extrude_to_ground=False):
+            style_to_use=None, hidden=False, follow_terrain=True, extrude_to_ground=False, camera=None):
     """
     Creates a KML element of a polygon.
 
@@ -416,6 +481,8 @@ def polygon(coords, name, headers=None, attributes=None, altitude_mode="CTG",
             Note: Only works when `altitude_mode` is set to 'CTG'.
         extrude_to_ground (Bool) [Optional]:
             True = Vertices of the line are extruded toward the center of the Earth's center. (Default = False).
+        camera (Element) [Optional]:
+            A KML 'LookAt' element that defines the default camera angle to the polygon.
 
     OUTPUT:
         placemark (Object):
@@ -432,6 +499,7 @@ def polygon(coords, name, headers=None, attributes=None, altitude_mode="CTG",
     hidden : bool, optional
     follow_terrain : bool, optional
     extrude_to_ground : bool, optional
+    camera : element, optional
 
     Returns
     -------
@@ -508,6 +576,10 @@ def polygon(coords, name, headers=None, attributes=None, altitude_mode="CTG",
     for cell in range(len(headers)):
         data = ET.SubElement(extended_data, 'Data', {'name': headers[cell]})
         ET.SubElement(data, 'value').text = str(attributes[cell])
+
+    # Placemark Default Camera Angle
+    if camera is not None:
+        placemark.append(camera)
 
     return placemark
 
@@ -688,7 +760,7 @@ def polygon_style(name, fill_color=('#03cafc', 40), outline_color=('#fcdf03', 10
     return style
 
 
-def folder(name, loose_items, description='', collapsed=True, hidden=True):
+def folder(name, loose_items, description='', collapsed=True, hidden=True, camera=None):
     """
     Creates a KML a folder and fills it with specified KML elements.
 
@@ -712,6 +784,8 @@ def folder(name, loose_items, description='', collapsed=True, hidden=True):
                 default is to have folders set to hidden so that empty folders are not visible. If an item gets added
                 to a folder and that item is set to be visible, the containing folder will become visible as well -
                 even if the folder set to hidden. (Default = `True`)
+        camera (Element) [Optional]:
+            A KML 'LookAt' element that defines the default camera angle to the line.
 
     OUTPUT:
         new_folder (Object):
@@ -724,6 +798,7 @@ def folder(name, loose_items, description='', collapsed=True, hidden=True):
     description : str, optional
     collapsed : bool, optional
     hidden : bool, optional
+    camera : element, optional
 
     Returns
     -------
@@ -752,10 +827,14 @@ def folder(name, loose_items, description='', collapsed=True, hidden=True):
     for item in loose_items:
         ET.Element.append(new_folder, item)
 
+    # Folder Default Camera Angle
+    if camera is not None:
+        new_folder.append(camera)
+
     return new_folder
 
 
-def kml(name, features, path, description='', styles=None, collapsed=True):
+def kml(name, features, path, description='', styles=None, collapsed=True, camera=None):
     """
     Creates a KML string.
 
@@ -778,6 +857,8 @@ def kml(name, features, path, description='', styles=None, collapsed=True):
         collapsed (Bool) [Optional]:
                 True = Root folder is collapsed.
                 False = Root folder is open/expanded.
+        camera (Element) [Optional]:
+            A KML 'LookAt' element that defines the default camera angle to the line.
 
     OUTPUT:
         None
@@ -790,6 +871,7 @@ def kml(name, features, path, description='', styles=None, collapsed=True):
     description : str, optional
     styles : list, optional
     collapsed : bool, optional
+    camera : element, optional
 
     """
 
@@ -811,6 +893,10 @@ def kml(name, features, path, description='', styles=None, collapsed=True):
 
     for item in features:
         ET.Element.append(body, item)
+
+    # KLM Default Camera Angle
+    if camera is not None:
+        body.append(camera)
 
     kml_string = '<?xml version="1.0" encoding="UTF-8"?>'
     kml_string += ET.tostring(kml_doc, encoding='unicode', method='xml')
