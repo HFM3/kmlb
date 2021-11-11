@@ -122,7 +122,7 @@ def look_at(coords, azimuth, tilt, distance, altitude_mode="ABS"):
             A value of 0 degrees indicates viewing from directly above.
             A value of 90 degrees indicates viewing along the horizon.
         distance (Float):
-            Distance in meters from the point specified by 'coords'
+            Camera distance in meters from the point specified by 'coords'
         altitude_mode (String) [Optional]:
             An abbreviated altitude mode ('CTG', 'RTG', 'ABS') (Default = 'ABS').
 
