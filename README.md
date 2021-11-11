@@ -24,6 +24,7 @@
 - Icons
 - Coordinates
 - Elevations
+- Camera Angles
 
 ## Example Use
 
@@ -105,7 +106,7 @@ Defines a KML point element.
 `point()`
 
 ```python
-point(coords, name, headers=None, attributes=None, altitude_mode="CTG", style_to_use=None, hidden=False)
+point(coords, name, headers=None, attributes=None, altitude_mode="CTG", style_to_use=None, hidden=False, camera=None)
 ```
 
 #### Parameters:
@@ -119,13 +120,14 @@ point(coords, name, headers=None, attributes=None, altitude_mode="CTG", style_to
 
 ##### Optional Parameters
 
-| Parameter     | Type   | Description                                                  |
-| ------------- | ------ | ------------------------------------------------------------ |
-| headers       | List   | A list of the attribute titles for the point feature         |
-| attributes    | List   | A list of properties for the point feature.                  |
-| altitude_mode | String | One of the abbreviated altitude mode options: `CTG`, `RTG`, `ABS`  (Default = `'CTG'`) |
-| style_to_use  | String | The name of the `point_style()` to be used (Default = `None`). |
-| hidden        | Bool   | A value of `True` or `False` where `False` means that the point will be visible. (Default = `False`). |
+| Parameter     | Type    | Description                                                  |
+| ------------- | ------- | ------------------------------------------------------------ |
+| headers       | List    | A list of the attribute titles for the point feature         |
+| attributes    | List    | A list of properties for the point feature.                  |
+| altitude_mode | String  | One of the abbreviated altitude mode options: `CTG`, `RTG`, `ABS`  (Default = `'CTG'`) |
+| style_to_use  | String  | The name of the `point_style()` to be used (Default = `None`). |
+| hidden        | Bool    | A value of `True` or `False` where `False` means that the point will be visible. (Default = `False`). |
+| camera        | Element | A KML 'LookAt' element. (Default = `None`)                   |
 
 #### Return
 
@@ -254,15 +256,16 @@ line(coords, name, headers=None, attributes=None, altitude_mode="CTG", style_to_
 
 ##### Optional Parameters
 
-| Parameter         | Type   | Description                                                  |
-| ----------------- | ------ | ------------------------------------------------------------ |
-| headers           | List   | A list of the attribute titles for the line feature          |
-| attributes        | List   | A list of properties for the line feature.                   |
-| altitude_mode     | String | One of the abbreviated altitude mode options: `CTG`, `RTG`, `ABS` (Default = `CTG`) |
-| style_to_use      | String | The name of the `line_style()` to be used (Default = `None`). |
-| hidden            | Bool   | A value of `True` or `True` where `True` means that the point will be visible. (Default = `True`). |
-| follow_terrain    | Bool   | Determines whether or not the line will follow terrain and curve of the Earth. (Default = `True`). |
-| extrude_to_ground | Bool   | Determines whether or not the vertices of the line are extruded toward the center of the Earth's center. (Default = `False`). |
+| Parameter         | Type    | Description                                                  |
+| ----------------- | ------- | ------------------------------------------------------------ |
+| headers           | List    | A list of the attribute titles for the line feature          |
+| attributes        | List    | A list of properties for the line feature.                   |
+| altitude_mode     | String  | One of the abbreviated altitude mode options: `CTG`, `RTG`, `ABS` (Default = `CTG`) |
+| style_to_use      | String  | The name of the `line_style()` to be used (Default = `None`). |
+| hidden            | Bool    | A value of `True` or `True` where `True` means that the point will be visible. (Default = `True`). |
+| follow_terrain    | Bool    | Determines whether or not the line will follow terrain and curve of the Earth. (Default = `True`). |
+| extrude_to_ground | Bool    | Determines whether or not the vertices of the line are extruded toward the center of the Earth's center. (Default = `False`). |
+| camera            | Element | A KML 'LookAt' element. (Default = `None`)                   |
 
 #### Return
 
@@ -337,15 +340,16 @@ polygon(coords, name, headers=None, attributes=None, altitude_mode="CTG", style_
 
 ##### Optional Parameters
 
-| Parameter         | Type   | Description                                                  |
-| ----------------- | ------ | ------------------------------------------------------------ |
-| headers           | List   | A list of the attribute titles for the polygon feature       |
-| attributes        | List   | A list of properties for the polygon feature.                |
-| altitude_mode     | String | One of the abbreviated altitude mode options: `CTG`, `RTG`, `ABS` (Default = `CTG`) |
-| style_to_use      | String | The name of the `polygon_style()`to be used (Default = `None`). |
-| hidden            | Bool   | A value of `True` or `True` where `True` means that the point will be visible. (Default = `True`). |
-| follow_terrain    | Bool   | Determines whether or not segments of the polygon will follow terrain and curve of the Earth. (Default = `True`). |
-| extrude_to_ground | Bool   | Determines whether or not the vertices of the polygon are extruded toward the center of the Earth's center. (Default = `False`). |
+| Parameter         | Type    | Description                                                  |
+| ----------------- | ------- | ------------------------------------------------------------ |
+| headers           | List    | A list of the attribute titles for the polygon feature       |
+| attributes        | List    | A list of properties for the polygon feature.                |
+| altitude_mode     | String  | One of the abbreviated altitude mode options: `CTG`, `RTG`, `ABS` (Default = `CTG`) |
+| style_to_use      | String  | The name of the `polygon_style()`to be used (Default = `None`). |
+| hidden            | Bool    | A value of `True` or `True` where `True` means that the point will be visible. (Default = `True`). |
+| follow_terrain    | Bool    | Determines whether or not segments of the polygon will follow terrain and curve of the Earth. (Default = `True`). |
+| extrude_to_ground | Bool    | Determines whether or not the vertices of the polygon are extruded toward the center of the Earth's center. (Default = `False`). |
+| camera            | Element | A KML 'LookAt' element. (Default = `None`)                   |
 
 #### Return
 
@@ -677,11 +681,12 @@ folder(name, loose_items, description='', collapsed=True, hidden=True)
 
 The default fill color of a polygon is a light transparent blue with a solid yellow outline.
 
-| Parameter   | Type   | Description                                                  |
-| ----------- | ------ | ------------------------------------------------------------ |
-| description | String | A small body of descriptive text for the folder.             |
-| collapsed   | Bool   | Sets the folder to either be open or collapsed by default.  `False` = Folder is open/expanded. (Default = `True`) |
-| hidden      | Bool   | Sets the visibility of a folder and its contents. A folder's visibility is ultimately determined by the visibility of the contents within. The default is to have folders set to hidden so that empty folders are not visible. If an item gets added to a folder and that item is set to be visible, the containing folder will become visible as well - even if the folder set to hidden. (Default = `True`) |
+| Parameter   | Type    | Description                                                  |
+| ----------- | ------- | ------------------------------------------------------------ |
+| description | String  | A small body of descriptive text for the folder.             |
+| collapsed   | Bool    | Sets the folder to either be open or collapsed by default.  `False` = Folder is open/expanded. (Default = `True`) |
+| hidden      | Bool    | Sets the visibility of a folder and its contents. A folder's visibility is ultimately determined by the visibility of the contents within. The default is to have folders set to hidden so that empty folders are not visible. If an item gets added to a folder and that item is set to be visible, the containing folder will become visible as well - even if the folder set to hidden. (Default = `True`) |
+| camera      | Element | A KML 'LookAt' element. (Default = `None`)                   |
 
 #### Return
 
@@ -724,6 +729,63 @@ line = kmlb.line(line_coords, ln_name, ln_headers, ln_attributes)
 f = kmlb.folder('Boston Path', [pt, line], 'Point & Line')
 ```
 
+## Look At Function
+
+### Create a 'LookAt' Element
+
+Create a folder to hold loose KLM geometry elements or other folders.
+
+`look_at()`
+
+```python
+look_at(coords, azimuth, tilt, distance, altitude_mode="ABS")
+```
+
+#### Parameters:
+
+##### Required Parameters
+
+| Parameter | Type  | Description                                                  |
+| :-------- | :---- | :----------------------------------------------------------- |
+| coords    | List  | A coordinate set: `[X, Y, Z]`                                |
+| azimuth   | Float | The direction that camera will face in degrees from 0-360.   |
+| tilt      | Float | The tilt of the camera towards the object. Values range from 0 to 90 degrees. A value of 0 degrees indicates viewing from directly above. A value of 90 degrees indicates viewing along the horizon. |
+| distance  | Float | Camera distance in meters from the point specified by 'coords'. |
+
+##### Optional Parameters
+
+The default fill color of a polygon is a light transparent blue with a solid yellow outline.
+
+| Parameter     | Type   | Description                                                  |
+| ------------- | ------ | ------------------------------------------------------------ |
+| altitude_mode | String | An abbreviated altitude mode ('CTG', 'RTG', 'ABS') (Default = 'ABS'). |
+
+#### Return
+
+| Return | Type    | Description            |
+| ------ | ------- | ---------------------- |
+| lookat | Element | A KML 'LookAt' element |
+
+### Example
+
+Create a 'LookAt' element
+
+```python
+# Defining the point's arguments ahead of defining the point
+pt_ coords = [-71.053568, 42.359053, 151]
+pt_name = 'Custom House Tower'
+pt_headers = ['City', 'Building', 'Height (M)']
+pt_attributes = ['Boston', 'Custom House Tower', '151']
+
+# Define a camera angle for point
+pt_camera = kmlb.look_at(coords, 210, 50, 100, 'RTG')
+
+# Define point with camera angle
+pt = kmlb.point(pt_coords, name, pt_headers, pt_attributes, 'RTG', camera=pt_camera)
+```
+
+## 
+
 ## Creating a KML
 
 ### KML
@@ -750,11 +812,12 @@ kml(name, features, path, description='', styles=None, collapsed=True)
 
 The default fill color of a polygon is a light transparent blue with a solid yellow outline.
 
-| Parameter   | Type   | Description                                                  |
-| ----------- | ------ | ------------------------------------------------------------ |
-| description | String | A small body of descriptive text for the KML file.           |
-| styles      | List   | A list of styles to be written to and used within the KML.   |
-| collapsed   | Bool   | Sets the root KML folder to either be open or collapsed by default.  `False` = Folder is open/expanded. (Default = `True`) |
+| Parameter   | Type    | Description                                                  |
+| ----------- | ------- | ------------------------------------------------------------ |
+| description | String  | A small body of descriptive text for the KML file.           |
+| styles      | List    | A list of styles to be written to and used within the KML.   |
+| collapsed   | Bool    | Sets the root KML folder to either be open or collapsed by default.  `False` = Folder is open/expanded. (Default = `True`) |
+| camera      | Element | A KML 'LookAt' element. (Default = `None`)                   |
 
 #### Return
 
@@ -789,7 +852,10 @@ name = 'Custom House Tower'
 attribute_titles = ['City', 'Building', 'Height (M)']
 attributes = ['Boston', 'Custom House Tower', '151']
 
-clock_tower = kmlb.point(coords, name, attribute_titles, attributes, 'RTG', 'Red Triangle')
+# Define a camera angle for point
+pt_camera = kmlb.look_at(coords, 210, 50, 100, 'RTG')
+
+clock_tower = kmlb.point(coords, name, attribute_titles, attributes, 'RTG', 'Red Triangle', pt_camera)
 
 # SEARCHING A POI
 aquarium = kmlb.search_poi("New England Aquarium")
