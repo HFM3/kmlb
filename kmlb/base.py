@@ -107,13 +107,15 @@ def kml_color(hex6_color, opacity=100):
     return kml_color_code
 
 
-def look_at(coords, azimuth, tilt, distance, altitude_mode="ABS"):
+def look_at(coords, distance, azimuth, tilt, altitude_mode="ABS"):
     """
     Creates a KML 'LookAt' element to create camera angles.
 
     INPUT:
         coords (List of three Floats):
             A list of x, y, z coordinates as [x, y, z].
+        distance (Float):
+            Camera distance in meters from the point specified by 'coords'
         azimuth (Float):
             The direction that camera will face in degrees from 0-360.
         tilt (Float):
@@ -121,8 +123,6 @@ def look_at(coords, azimuth, tilt, distance, altitude_mode="ABS"):
             Values range from 0 to 90 degrees.
             A value of 0 degrees indicates viewing from directly above.
             A value of 90 degrees indicates viewing along the horizon.
-        distance (Float):
-            Camera distance in meters from the point specified by 'coords'
         altitude_mode (String) [Optional]:
             An abbreviated altitude mode ('CTG', 'RTG', 'ABS') (Default = 'ABS').
 

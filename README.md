@@ -738,8 +738,10 @@ Create a folder to hold loose KLM geometry elements or other folders.
 `look_at()`
 
 ```python
-look_at(coords, azimuth, tilt, distance, altitude_mode="ABS")
+look_at(coords, distance, azimuth, tilt, altitude_mode="ABS")
 ```
+
+When using the `look_at()` function, the coordinates define a point (in 3D space) that the camera will be focused on. Distance is how far back from that point the camera will be. Azimuth is the horizontal angle from the camera to the point. Tilt is the camera's vertical angle away from nadir towards the point.
 
 #### Parameters:
 
@@ -748,9 +750,9 @@ look_at(coords, azimuth, tilt, distance, altitude_mode="ABS")
 | Parameter | Type  | Description                                                  |
 | :-------- | :---- | :----------------------------------------------------------- |
 | coords    | List  | A coordinate set: `[X, Y, Z]`                                |
+| distance  | Float | Camera distance in meters from the point specified by 'coords'. |
 | azimuth   | Float | The direction that camera will face in degrees from 0-360.   |
 | tilt      | Float | The tilt of the camera towards the object. Values range from 0 to 90 degrees. A value of 0 degrees indicates viewing from directly above. A value of 90 degrees indicates viewing along the horizon. |
-| distance  | Float | Camera distance in meters from the point specified by 'coords'. |
 
 ##### Optional Parameters
 
@@ -853,7 +855,7 @@ attribute_titles = ['City', 'Building', 'Height (M)']
 attributes = ['Boston', 'Custom House Tower', '151']
 
 # Define a camera angle for point
-pt_camera = kmlb.look_at(coords, 210, 50, 100, 'RTG')
+pt_camera = kmlb.look_at(coords, 100, 210, 50, 'RTG')
 
 clock_tower = kmlb.point(coords, name, attribute_titles, attributes, 'RTG', 'Red Triangle', pt_camera)
 
