@@ -170,9 +170,9 @@ def point(coords, name, headers=None, attributes=None, altitude_mode="CTG", styl
             A list of x, y, z coordinates as [x, y, z].
         name (String):
             The name to be given to the point.
-        headers (List of Strings) [Optional]:
+        headers (List) [Optional]:
             A list of titles (headers) to the attributes of the point feature.
-        attributes (List of Strings) [Optional]:
+        attributes (List) [Optional]:
             A list of the properties (attributes) of the point.
         altitude_mode (String) [Optional]:
             An abbreviated altitude mode ('CTG', 'RTG', 'ABS') (Default = 'CTG').
@@ -191,8 +191,8 @@ def point(coords, name, headers=None, attributes=None, altitude_mode="CTG", styl
     ----------
     coords : list[float]
     name : str
-    headers : list[str]
-    attributes : list[str]
+    headers : list
+    attributes : list
     altitude_mode : {'CTG', 'RTG', 'ABS'}, optional
     style_to_use : str, optional
     hidden : bool, optional
@@ -263,9 +263,9 @@ def search_poi(poi, name=None, headers=None, attributes=None, style_to_use=None,
             The string equivalent of what would be typed into a search bar to locate a POI or an address.
         name (String) [Optional]:
             The name to be given to the point. If no name is provided, the 'poi' argument's value will be used as the point's name.
-        headers (List of Strings) [Optional]:
+        headers (List) [Optional]:
             A list of titles (headers) to the attributes of the point feature.
-        attributes (List of Strings) [Optional]:
+        attributes (List) [Optional]:
             A list of the properties (attributes) of the point.
         style_to_use (String) [Optional]:
             The name of the point style to be used (Default = None).
@@ -280,8 +280,8 @@ def search_poi(poi, name=None, headers=None, attributes=None, style_to_use=None,
     ----------
     poi : str
     name : str
-    headers : list[str]
-    attributes : list[str]
+    headers : list
+    attributes : list
     style_to_use : str, optional
     hidden : bool, optional
 
@@ -344,9 +344,9 @@ def line(coords, name, headers=None, attributes=None, altitude_mode="CTG",
             A list of the coordinate sets [x, y, z] comprising the line.
         name (String):
             The name to be given to the line.
-        headers (List of Strings) [Optional]:
+        headers (List) [Optional]:
             A list of titles (headers) to the attributes of the point feature.
-        attributes (List of Strings) [Optional]:
+        attributes (List) [Optional]:
             A list of the properties (attributes) of the point.
         altitude_mode (String) [Optional]:
             An abbreviated altitude mode ('CTG', 'RTG', 'ABS') (Default = 'CTG').
@@ -371,8 +371,8 @@ def line(coords, name, headers=None, attributes=None, altitude_mode="CTG",
     ----------
     coords : collection
     name : str
-    headers : list[str]
-    attributes : list[str]
+    headers : list
+    attributes : list
     altitude_mode : {'CTG', 'RTG', 'ABS'}, optional
     style_to_use : str, optional
     hidden : bool, optional
@@ -465,9 +465,9 @@ def polygon(coords, name, headers=None, attributes=None, altitude_mode="CTG",
             A list of linear rings containing coordinates that comprise the polygon.
         name (String):
             The name to be given to the line.
-        headers (List of Strings) [Optional]:
+        headers (List) [Optional]:
             A list of titles (headers) to the attributes of the point feature.
-        attributes (List of Strings) [Optional]:
+        attributes (List) [Optional]:
             A list of the properties (attributes) of the point.
         altitude_mode (String) [Optional]:
             An abbreviated altitude mode ('CTG', 'RTG', 'ABS') (Default = 'CTG').
@@ -492,8 +492,8 @@ def polygon(coords, name, headers=None, attributes=None, altitude_mode="CTG",
     ----------
     coords : collection
     name : str
-    headers : list[str]
-    attributes : list[str]
+    headers : list
+    attributes : list
     altitude_mode : {'CTG', 'RTG', 'ABS'}, optional
     style_to_use : str, optional
     hidden : bool, optional
