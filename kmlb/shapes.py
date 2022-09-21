@@ -48,8 +48,11 @@ def wedge(center, azimuth, width, radius, steps=15, name='Wedge', **kwargs):
     """
 
     # Attribute table
-    headers = ['Azimuth', 'Width', 'Radius', 'Steps', 'Center']
-    attributes = [azimuth, width, radius, steps, center]
+    headers_default = ['Azimuth', 'Width', 'Radius', 'Steps', 'Center Lat', 'Center Lng', 'Center Z']
+    headers = kwargs.pop('headers', headers_default)
+
+    attributes_default = [azimuth, width, radius, steps, center[1], center[0], center[2]]
+    attributes = kwargs.pop('attributes', attributes_default)
 
     # Starting azimuth is a 1/2 width clockwise from provided azimuth.
     start_az = (azimuth + width / 2) % 360
@@ -66,9 +69,9 @@ def wedge(center, azimuth, width, radius, steps=15, name='Wedge', **kwargs):
     coords.append(center)
 
     # Create polygon
-    wedge = kmlb.base.polygon([coords], name, headers, attributes, **kwargs)
+    wedge_poly = kmlb.base.polygon([coords], name, headers, attributes, **kwargs)
 
-    return wedge
+    return wedge_poly
 
 
 
