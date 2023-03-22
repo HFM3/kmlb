@@ -851,7 +851,7 @@ def kml(name, features, path, description='', styles=None, collapsed=True, camer
             Necessary folders will be created of they do not exist.
             Note: The file path should end '.kml'
         description (String) [Optional]:
-                A small body of descriptive text for the folder.
+                A small body of descriptive text for the kml.
         styles (List) [Optional]:
             A list of the defined style object to include in the KML
         collapsed (Bool) [Optional]:
