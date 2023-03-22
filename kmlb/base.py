@@ -906,3 +906,72 @@ def kml(name, features, path, description='', styles=None, collapsed=True, camer
 
     with filepath.open("w", encoding="utf-8") as f:
         f.write(kml_string)
+
+
+def networklink_kml(name, link_path, write_path, description='', refresh_interval=300, view_refresh=0, collapsed=True):
+    """
+       Creates a KML string.
+
+       OVERVIEW:
+           Creates a the XML string that defines the KML document with a network link. This string can be written to text file with a '.kml' extension.
+
+       INPUTS:
+           name (String):
+               The name of the KML
+           link_path (String):
+               url to hosted kml
+           write_path (String):
+               The path to the folder where the KML file will be written to. The KML's file name is defined in the path.
+               Necessary folders will be created of they do not exist.
+               Note: The file path should end '.kml'
+           description (String) [Optional]:
+                   A small body of descriptive text for the kml.
+           refresh_interval (Int) [Optional]:
+               Number of seconds between file refreshes.
+           view_refresh (Int) [Optional]:
+               Number of seconds after camera movement stops before area is refreshed.
+           collapsed (Bool) [Optional]:
+                   True = Root folder is collapsed.
+                   False = Root folder is open/expanded.
+
+       OUTPUT:
+           None
+
+       Parameters
+       ----------
+       name : str
+       link_path : str
+       write_path : str
+       description : str, optional
+       refresh_interval : int, optional
+       view_refresh : int, optional
+       collapsed : bool, optional
+
+       """
+
+    kml_doc = ET.Element('kml', {'xmlns': 'http://www.opengis.net/kml/2.2'})
+    ntwrk = ET.SubElement(kml_doc, "NetworkLink")
+    ET.SubElement(ntwrk, "name").text = str(name)
+    ET.SubElement(ntwrk, "description").text = str(description)
+    collapsed = 0 if collapsed is True else 1
+    ET.SubElement(ntwrk, "open").text = str(collapsed)
+
+    style = ET.SubElement(ntwrk, "Style")
+    list_style = ET.SubElement(style, "ListStyle")
+    ET.SubElement(list_style, "listItemType").text = 'check'
+
+    link = ET.SubElement(ntwrk, "Link")
+    ET.SubElement(link, "href").text = link_path
+    ET.SubElement(link, "refreshMode").text = 'onInterval'
+    ET.SubElement(link, "refreshInterval").text = str(refresh_interval)
+    ET.SubElement(link, "viewRefreshMode").text = 'onStop'
+    ET.SubElement(link, "viewRefreshTime").text = str(view_refresh)
+
+    kml_string = '<?xml version="1.0" encoding="UTF-8"?>'
+    kml_string += ET.tostring(kml_doc, encoding='unicode', method='xml')
+
+    filepath = Path(write_path)
+    filepath.parent.mkdir(parents=True, exist_ok=True)
+
+    with filepath.open("w", encoding="utf-8") as f:
+        f.write(kml_string)
