@@ -868,7 +868,7 @@ def kml(name, features, path=None, description='', styles=None, collapsed=True, 
     ----------
     name : str
     features : list
-    path : str
+    path : str, optional
     description : str, optional
     styles : list, optional
     collapsed : bool, optional
@@ -918,7 +918,7 @@ def kml(name, features, path=None, description='', styles=None, collapsed=True, 
     return kml_string
 
 
-def networklink_kml(name, link_path, write_path=None, description='', refresh_interval=300, view_refresh=0, collapsed=True):
+def networklink_kml(name, link_path, write_path=None, description='', refresh_interval=300, collapsed=True):
     """
        Creates a KML string.
 
@@ -952,7 +952,7 @@ def networklink_kml(name, link_path, write_path=None, description='', refresh_in
        ----------
        name : str
        link_path : str
-       write_path : str
+       write_path : str, optional
        description : str, optional
        refresh_interval : int, optional
        view_refresh : int, optional
@@ -979,8 +979,6 @@ def networklink_kml(name, link_path, write_path=None, description='', refresh_in
     ET.SubElement(link, "href").text = link_path
     ET.SubElement(link, "refreshMode").text = 'onInterval'
     ET.SubElement(link, "refreshInterval").text = str(refresh_interval)
-    ET.SubElement(link, "viewRefreshMode").text = 'onStop'
-    ET.SubElement(link, "viewRefreshTime").text = str(view_refresh)
 
     kml_string = '<?xml version="1.0" encoding="UTF-8"?>'
     kml_string += ET.tostring(kml_doc, encoding='unicode', method='xml')
