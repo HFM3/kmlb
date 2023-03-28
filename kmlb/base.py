@@ -834,19 +834,19 @@ def folder(name, loose_items, description='', collapsed=True, hidden=True, camer
     return new_folder
 
 
-def kml(name, features, path, description='', styles=None, collapsed=True, camera=None):
+def kml(name, features, path=None, description='', styles=None, collapsed=True, camera=None):
     """
     Creates a KML string.
 
     OVERVIEW:
-        Creates a the XML string that defines the KML document. This string can be written to text file with a '.kml' extension.
+        Creates an XML string that defines the KML document. This string can be written to text file with a '.kml' extension.
 
     INPUTS:
         name (String):
             The name of the KML
         features (List):
             A list of the defined point, line, polygon, and/or folder objects to include in the KML
-        path (String):
+        path (String) [Optional]:
             The path to the folder where the KML file will be written to. The KML's file name is defined in the path.
             Necessary folders will be created of they do not exist.
             Note: The file path should end '.kml'
@@ -861,7 +861,8 @@ def kml(name, features, path, description='', styles=None, collapsed=True, camer
             A KML 'LookAt' element that defines the default camera angle to the line.
 
     OUTPUT:
-        None
+        kml_string (String):
+            xml string of kml file
 
     Parameters
     ----------
@@ -872,6 +873,10 @@ def kml(name, features, path, description='', styles=None, collapsed=True, camer
     styles : list, optional
     collapsed : bool, optional
     camera : element, optional
+
+    Returns
+    -------
+    kml_string : str
 
     """
 
@@ -901,26 +906,31 @@ def kml(name, features, path, description='', styles=None, collapsed=True, camer
     kml_string = '<?xml version="1.0" encoding="UTF-8"?>'
     kml_string += ET.tostring(kml_doc, encoding='unicode', method='xml')
 
-    filepath = Path(path)
-    filepath.parent.mkdir(parents=True, exist_ok=True)
+    if path is not None:
+        filepath = Path(path)
+        filepath.parent.mkdir(parents=True, exist_ok=True)
 
-    with filepath.open("w", encoding="utf-8") as f:
-        f.write(kml_string)
+        with filepath.open("w", encoding="utf-8") as f:
+            f.write(kml_string)
+    else:
+        pass
+
+    return kml_string
 
 
-def networklink_kml(name, link_path, write_path, description='', refresh_interval=300, view_refresh=0, collapsed=True):
+def networklink_kml(name, link_path, write_path=None, description='', refresh_interval=300, view_refresh=0, collapsed=True):
     """
        Creates a KML string.
 
        OVERVIEW:
-           Creates a the XML string that defines the KML document with a network link. This string can be written to text file with a '.kml' extension.
+           Creates an XML string that defines the KML document with a network link. This string can be written to text file with a '.kml' extension.
 
        INPUTS:
            name (String):
                The name of the KML
            link_path (String):
                url to hosted kml
-           write_path (String):
+           write_path (String) [Optional]:
                The path to the folder where the KML file will be written to. The KML's file name is defined in the path.
                Necessary folders will be created of they do not exist.
                Note: The file path should end '.kml'
@@ -935,7 +945,8 @@ def networklink_kml(name, link_path, write_path, description='', refresh_interva
                    False = Root folder is open/expanded.
 
        OUTPUT:
-           None
+           kml_string (String):
+            xml string of kml file
 
        Parameters
        ----------
@@ -946,6 +957,10 @@ def networklink_kml(name, link_path, write_path, description='', refresh_interva
        refresh_interval : int, optional
        view_refresh : int, optional
        collapsed : bool, optional
+
+       Returns
+       -------
+       kml_string : str
 
        """
 
@@ -970,8 +985,13 @@ def networklink_kml(name, link_path, write_path, description='', refresh_interva
     kml_string = '<?xml version="1.0" encoding="UTF-8"?>'
     kml_string += ET.tostring(kml_doc, encoding='unicode', method='xml')
 
-    filepath = Path(write_path)
-    filepath.parent.mkdir(parents=True, exist_ok=True)
+    if write_path is not None:
+        filepath = Path(write_path)
+        filepath.parent.mkdir(parents=True, exist_ok=True)
 
-    with filepath.open("w", encoding="utf-8") as f:
-        f.write(kml_string)
+        with filepath.open("w", encoding="utf-8") as f:
+            f.write(kml_string)
+    else:
+        pass
+
+    return kml_string
