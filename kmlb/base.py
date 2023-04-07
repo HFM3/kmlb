@@ -595,7 +595,7 @@ def polygon(coords, name, headers=None, attributes=None, altitude_mode="CTG",
 
 
 def point_style(name, icon="http://maps.google.com/mapfiles/kml/shapes/placemark_circle.png", color=('#ffff00', 100),
-                scale=1.2, label_color=('#ffffff', 100), label_size=1.0):
+                scale=1.2, label_color=('#ffffff', 100), label_size=1.0, extrude_color=('#ffffff', 100), extrude_size = 1.0):
     """
     Defines a KML point style.
 
@@ -623,6 +623,14 @@ def point_style(name, icon="http://maps.google.com/mapfiles/kml/shapes/placemark
             Opacity is defined with an integer between 0(min) and 100(max).
         label_size (Float) [Optional]:
             Text size of point's label.
+        extrude_color (Tuple) [Optional]:
+            Defines the color and opacity of the labels to use.
+            A tuple containing color and opactiy repsectively.
+            Color is defined with a hex color code.
+            Opacity is defined with an integer between 0(min) and 100(max).
+        extrude_size (Float) [Optional]:
+            Thickness of line extruded to ground
+
 
     OUTPUT:
         style (Object):
@@ -636,6 +644,8 @@ def point_style(name, icon="http://maps.google.com/mapfiles/kml/shapes/placemark
     scale : float, optional
     label_color : tuple[str, int], optional
     label_size : float, optional
+    extrude_color : tuple[str, int], optional
+    extrude_size : float, optional
 
     Returns
     -------
@@ -657,6 +667,10 @@ def point_style(name, icon="http://maps.google.com/mapfiles/kml/shapes/placemark
     label_style = ET.SubElement(style, "LabelStyle")
     ET.SubElement(label_style, "scale").text = str(label_size)
     ET.SubElement(label_style, "color").text = kml_color(*label_color)
+
+    extrude_style = ET.SubElement(style, "LineStyle")
+    ET.SubElement(extrude_style, "color").text = kml_color(*extrude_color)
+    ET.SubElement(extrude_style, "width").text = str(extrude_size)
 
     return style
 
