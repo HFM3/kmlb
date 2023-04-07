@@ -158,7 +158,7 @@ def look_at(coords, distance, azimuth, tilt, altitude_mode="ABS"):
     return lookat
 
 
-def point(coords, name, headers=None, attributes=None, altitude_mode="CTG", style_to_use=None, hidden=False, extrude=False, camera=None):
+def point(coords, name, headers=None, attributes=None, altitude_mode="CTG", style_to_use=None, hidden=False, extrude_to_ground=False, camera=None):
     """
     Creates a KML point marker.
 
@@ -180,7 +180,7 @@ def point(coords, name, headers=None, attributes=None, altitude_mode="CTG", styl
             The name of the point style to be used (Default = None).
         hidden (Bool) [Optional]:
             A value of 'True' or 'False' where 'False' means the point will be visible (Default = 'False').
-        extrude (bool) [Optional]:
+        extrude_to_ground (bool) [Optional]:
             A value of 'True' or 'False' where 'True' means the point will be extruded to ground (Default = 'False').
         camera (Element) [Optional]:
             A KML 'LookAt' element that defines the default camera angle to the point.
@@ -198,7 +198,7 @@ def point(coords, name, headers=None, attributes=None, altitude_mode="CTG", styl
     altitude_mode : {'CTG', 'RTG', 'ABS'}, optional
     style_to_use : str, optional
     hidden : bool, optional
-    extrude : bool, optional
+    extrude_to_ground : bool, optional
     camera : element, optional
 
     Returns
@@ -236,14 +236,14 @@ def point(coords, name, headers=None, attributes=None, altitude_mode="CTG", styl
     kml_point = ET.SubElement(placemark, 'Point')
 
     # Extrude point
-    ET.SubElement(kml_point, 'altitudeMode').text = altitude_modes(altitude_mode)
-
-    # Assign altitude mode to point
-    if extrude is True:
+    if extrude_to_ground is True:
         extrude = 1
     else:
         extrude = 0
-    ET.SubElement(kml_point, 'extrude').text = extrude
+    ET.SubElement(kml_point, 'extrude').text = str(extrude)
+
+    # Assign altitude mode to point
+    ET.SubElement(kml_point, 'altitudeMode').text = altitude_modes(altitude_mode)
 
     # Create point's coordinate string.
     ET.SubElement(kml_point, 'coordinates').text = f"{coords[0]},{coords[1]},{coords[2]}"
