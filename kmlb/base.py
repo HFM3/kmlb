@@ -858,7 +858,7 @@ def kml(name, features, path=None, description='', styles=None, collapsed=True, 
                 True = Root folder is collapsed.
                 False = Root folder is open/expanded.
         camera (Element) [Optional]:
-            A KML 'LookAt' element that defines the default camera angle to the line.
+            A KML 'LookAt' element that defines the default camera angle to the kml.
 
     OUTPUT:
         kml_string (String):
@@ -938,8 +938,6 @@ def networklink_kml(name, link_path, write_path=None, description='', refresh_in
                    A small body of descriptive text for the kml.
            refresh_interval (Int) [Optional]:
                Number of seconds between file refreshes.
-           view_refresh (Int) [Optional]:
-               Number of seconds after camera movement stops before area is refreshed.
            collapsed (Bool) [Optional]:
                    True = Root folder is collapsed.
                    False = Root folder is open/expanded.
@@ -955,7 +953,6 @@ def networklink_kml(name, link_path, write_path=None, description='', refresh_in
        write_path : str, optional
        description : str, optional
        refresh_interval : int, optional
-       view_refresh : int, optional
        collapsed : bool, optional
 
        Returns
@@ -993,3 +990,78 @@ def networklink_kml(name, link_path, write_path=None, description='', refresh_in
         pass
 
     return kml_string
+
+
+def ground_overlay(name, img_path, bounds, description='', opacity=100, refresh_interval=300, altitude=0, altitude_mode='CTG', hidden=False, camera=None):
+    """
+    INPUTS:
+    name (String):
+        The name to be given to the overlay.
+    img_path (String):
+        Path to the image to be used
+    bounds (List of four floats):
+        [North, South, East, West] bounding box coordinates of image
+    description (String) [Optional]:
+        A small body of descriptive text for the overlay. (Default = '')
+    opacity (Integer) [Optional]:
+        Opactiy percentage. 100 = opaque, 0 = invisible. (Default = 100)
+    refresh_interval (Integer) [Optional]:
+        Number of seconds between image refreshes. (Default = 300)
+    altitude (Integer) [Optional]:
+        Height in meters at which to render the overlay.
+    altitude_mode (String) [Optional]:
+        An abbreviated altitude mode ('CTG' or 'ABS') (Default = 'CTG').
+    hidden (Bool) [Optional]:
+        A value of 'True' or 'False' where 'False' means the point will be visible (Default = 'False').
+    camera (Element) [Optional]:
+        A KML 'LookAt' element that defines the default camera angle to the line. (Default = None)
+
+
+    Parameters
+    ----------
+    name : str
+    img_path : str
+    bounds : list[float]
+    description : str, optional
+    opacity : int, optional
+    refresh_interval : int, optional
+    altitude : int, optional
+    altitude_mode : str, optional
+    hidden : bool, optional
+    camera : element, optional
+
+    Returns
+    -------
+    ground_overlay : element
+
+    """
+    overlay = ET.Element("GroundOverlay")
+    ET.SubElement(overlay, "name").text = str(name)
+    ET.SubElement(overlay, "description").text = str(description)
+    ET.SubElement(overlay, "color").text = kml_color('#FFFFFF', opacity)
+    ET.SubElement(overlay, "altitude").text = str(altitude)
+    ET.SubElement(overlay, "altitudeMode").text = altitude_modes(altitude_mode)
+
+    icon = ET.SubElement(overlay, "Icon")
+    ET.SubElement(icon, "href").text = img_path
+    ET.SubElement(icon, "refreshMode").text = "onInterval"
+    ET.SubElement(icon, "refreshInterval").text = str(refresh_interval)
+
+    llbox = ET.SubElement(overlay, "LatLonBox")
+    ET.SubElement(llbox, "north").text = str(bounds[0])
+    ET.SubElement(llbox, "south").text = str(bounds[1])
+    ET.SubElement(llbox, "east").text = str(bounds[2])
+    ET.SubElement(llbox, "west").text = str(bounds[3])
+
+    # Set 'visibility' value
+    visibility = 0
+    if hidden is False:
+        visibility = 1
+
+    ET.SubElement(overlay, 'visibility').text = str(visibility)
+
+    # Image Default Camera Angle
+    if camera is not None:
+        overlay.append(camera)
+
+    return overlay
