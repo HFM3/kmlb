@@ -660,7 +660,7 @@ placemark = kmlb.polygon(coords, name, attribute_titles, attributes, style_to_us
 
 ### Create a Folder
 
-Create a folder to hold loose KLM geometry elements or other folders.
+Create a folder to hold loose KML geometry elements or other folders.
 
 `folder()`
 
