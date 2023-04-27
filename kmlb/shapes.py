@@ -140,7 +140,7 @@ def circle(center, radius, steps=72, name='Circle', **kwargs):
     return circle_poly
 
 
-def graduated_rings(center, start, increment, count, folder_name='Rings', point_style_to_use='RingStyle', label_angle=90, **kwargs):
+def graduated_rings(center, start, increment, count, folder_name='Rings', point_style_to_use='g_ring_pts', label_angle=135, **kwargs):
     """
     Creates a folder of graduated rings and labels.
 
@@ -162,7 +162,7 @@ def graduated_rings(center, start, increment, count, folder_name='Rings', point_
             (Default = Rings)
         point_style_to_use (String) [Optional]:
             The name of the point style to be used.
-            (Default = 'RingStyle')
+            (Default = 'g_ring_pts')
         label_angle (Float) [Optional]:
             The angle in degrees from north at which to label the rings.
             (Default = 90)
