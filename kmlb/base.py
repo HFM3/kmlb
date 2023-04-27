@@ -1205,7 +1205,7 @@ def kmz(kmz_name, kmls, path, files_as_bytes=None, **kwargs):
     Creates a KMZ file.
 
        OVERVIEW:
-           Creates an KMZ file that can contain KMLs and files such as images.
+           Creates a KMZ file that can contain KMLs and files such as images.
 
        INPUTS:
             kmz_name (String):
@@ -1216,8 +1216,8 @@ def kmz(kmz_name, kmls, path, files_as_bytes=None, **kwargs):
                 The path where the kmz file will be written to. The KMz's file name is defined within the path.
                 Necessary folders will be created if they do not exist.
                 Note: The file path should end '.kmz'
-            files_as_bytes (Int) [Optional]:
-                 Number of seconds between file refreshes. (Default = None)
+            files_as_bytes (Tuple) [Optional]:
+                 (desitnation path of file within KMZ root, data as bytes)
             kwargs
                 Any argument accepted by the kml function
 
