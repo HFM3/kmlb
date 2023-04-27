@@ -4,6 +4,7 @@ Functions for creating KML files.
 
 import xml.etree.ElementTree as ET
 from pathlib import Path
+import zipfile
 
 
 def altitude_modes(altitude_mode='CTG'):
@@ -1197,3 +1198,62 @@ def ground_overlay(name, img_path, bounds, description='', opacity=100, refresh_
         overlay.append(camera)
 
     return overlay
+
+
+def kmz(kmz_name, kmls, path, files_as_bytes=None, **kwargs):
+    """
+    Creates a KMZ file.
+
+       OVERVIEW:
+           Creates an KMZ file that can contain KMLs and files such as images.
+
+       INPUTS:
+            kmz_name (String):
+                The name of the KMZ
+            kmls (Tuples):
+                 (Layer Name, KML (xml str), foler_type)
+            path (String) [Optional]:
+                 A small body of descriptive text for the NetworkLink element.
+            files_as_bytes (Int) [Optional]:
+                 Number of seconds between file refreshes. (Default = None)
+            kwargs
+                Any argument accepted by the kml function
+
+       OUTPUT:
+           kml_string (String):
+            xml string of kml file
+
+       Parameters
+       ----------
+       kmz_name: str
+       kmls: tuple
+       path: str
+       files_as_bytes: tuple
+       kwargs
+
+       Returns
+       -------
+       network_link : element
+
+    """
+
+    network_link_elements = list()
+
+    with zipfile.ZipFile(path, 'w') as zf:
+        for count, doc in enumerate(kmls):
+            name = doc[0]
+            data = doc[1].encode()
+            folder_type = doc[2]
+            doc_path = f"kmls/doc_{count}.kml"
+            zf.writestr(doc_path, data)
+            nl = network_link(name, doc_path, folder_type=folder_type)
+            network_link_elements.append(nl)
+
+        if files_as_bytes is not None:
+            for fb in files_as_bytes:
+                file_path = fb[0]
+                data = fb[1]
+                zf.writestr(file_path, data)
+
+        index_k = kml(kmz_name, network_link_elements, **kwargs).encode()
+        zf.writestr("doc.kml", index_k)
