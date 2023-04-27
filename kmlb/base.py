@@ -961,7 +961,7 @@ def kml(name, features, path=None, description='', styles=None, collapsed=True, 
     return kml_string
 
 
-def networklink_kml(name, link_path, write_path=None, description='', refresh_interval=300, collapsed=True):
+def networklink_kml(name, link_path, write_path=None, description='', refresh_interval=None, collapsed=True):
     """
        Creates a KML string.
 
@@ -980,7 +980,7 @@ def networklink_kml(name, link_path, write_path=None, description='', refresh_in
            description (String) [Optional]:
                    A small body of descriptive text for the kml.
            refresh_interval (Int) [Optional]:
-               Number of seconds between file refreshes.
+               Number of seconds between file refreshes. (Default = None)
            collapsed (Bool) [Optional]:
                    True = Root folder is collapsed.
                    False = Root folder is open/expanded.
@@ -1017,8 +1017,12 @@ def networklink_kml(name, link_path, write_path=None, description='', refresh_in
 
     link = ET.SubElement(ntwrk, "Link")
     ET.SubElement(link, "href").text = link_path
-    ET.SubElement(link, "refreshMode").text = 'onInterval'
-    ET.SubElement(link, "refreshInterval").text = str(refresh_interval)
+
+    if refresh_interval is not None:
+        ET.SubElement(link, "refreshMode").text = 'onInterval'
+        ET.SubElement(link, "refreshInterval").text = str(refresh_interval)
+    else:
+        pass
 
     kml_string = '<?xml version="1.0" encoding="UTF-8"?>'
     kml_string += ET.tostring(kml_doc, encoding='unicode', method='xml')
@@ -1035,7 +1039,89 @@ def networklink_kml(name, link_path, write_path=None, description='', refresh_in
     return kml_string
 
 
-def ground_overlay(name, img_path, bounds, description='', opacity=100, refresh_interval=300, altitude=0, altitude_mode='CTG', hidden=False, camera=None):
+def network_link(name, link_path, description='', refresh_interval=None, folder_type=1, collapsed=True, camera=None):
+    """
+       Creates a NetworkLink element.
+
+       OVERVIEW:
+           Creates an XML element that defines a network link. This string element can be added to kml and folders.
+
+       INPUTS:
+           name (String):
+               The name of the Network Link element
+           link_path (String):
+                Path to file
+           description (String) [Optional]:
+                A small body of descriptive text for the NetworkLink element.
+           refresh_interval (Int) [Optional]:
+                Number of seconds between file refreshes. (Default = None)
+            folder_type (Integer):
+                Can be any of the following values:
+                1 = check, 2 = radioFolder, 3 = checkOffOnly, 4 = checkHideChildren
+           collapsed (Bool) [Optional]:
+                True = Root folder is collapsed.
+                False = Root folder is open/expanded.
+            camera (Element) [Optional]:
+                A KML 'LookAt' element that defines the default camera angle to the kml.
+
+       OUTPUT:
+           network_link (String):
+                xml element of network link
+
+       Parameters
+       ----------
+       name : str
+       link_path : str
+       description : str, optional
+       refresh_interval : int, optional
+       folder_type : int, optional
+       collapsed : bool, optional
+       camera : element, optional
+
+       Returns
+       -------
+       network_link : element
+
+       """
+
+    network_link = ET.Element("NetworkLink")
+    ET.SubElement(network_link, "name").text = str(name)
+    ET.SubElement(network_link, "description").text = str(description)
+    collapsed = 0 if collapsed is True else 1
+    ET.SubElement(network_link, "open").text = str(collapsed)
+
+    style = ET.SubElement(network_link, "Style")
+    list_style = ET.SubElement(style, "ListStyle")
+    if folder_type == 1:
+        folder_type = 'check'
+    elif folder_type == 2:
+        folder_type = 'radioFolder'
+    elif folder_type == 3:
+        folder_type = 'checkOffOnly'
+    elif folder_type == 4:
+        folder_type = 'checkHideChildren'
+    else:
+        folder_type = 'check'
+
+    ET.SubElement(list_style, "listItemType").text = folder_type
+
+    link = ET.SubElement(network_link, "Link")
+    ET.SubElement(link, "href").text = link_path
+
+    if refresh_interval is not None:
+        ET.SubElement(link, "refreshMode").text = 'onInterval'
+        ET.SubElement(link, "refreshInterval").text = str(refresh_interval)
+    else:
+        pass
+
+    # Network Link Camera Angle
+    if camera is not None:
+        network_link.append(camera)
+
+    return network_link
+
+
+def ground_overlay(name, img_path, bounds, description='', opacity=100, refresh_interval=None, altitude=0, altitude_mode='CTG', hidden=False, camera=None):
     """
     INPUTS:
     name (String):
@@ -1087,8 +1173,11 @@ def ground_overlay(name, img_path, bounds, description='', opacity=100, refresh_
 
     icon = ET.SubElement(overlay, "Icon")
     ET.SubElement(icon, "href").text = img_path
-    ET.SubElement(icon, "refreshMode").text = "onInterval"
-    ET.SubElement(icon, "refreshInterval").text = str(refresh_interval)
+    if refresh_interval is not None:
+        ET.SubElement(icon, "refreshMode").text = "onInterval"
+        ET.SubElement(icon, "refreshInterval").text = str(refresh_interval)
+    else:
+        pass
 
     llbox = ET.SubElement(overlay, "LatLonBox")
     ET.SubElement(llbox, "north").text = str(bounds[0])
