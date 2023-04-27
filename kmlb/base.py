@@ -784,7 +784,7 @@ def polygon_style(name, fill_color=('#03cafc', 40), outline_color=('#fcdf03', 10
     return style
 
 
-def folder(name, loose_items, description='', collapsed=True, hidden=True, camera=None):
+def folder(name, loose_items, description='', folder_type=1, collapsed=True, hidden=False, camera=None):
     """
     Creates a KML a folder and fills it with specified KML elements.
 
@@ -798,16 +798,18 @@ def folder(name, loose_items, description='', collapsed=True, hidden=True, camer
             A list of loose items to include in the new folder.
         description (String) [Optional]:
             A small body of descriptive text for the folder.
+        folder_type (Integer):
+            Can be any of the following values:
+            1 = check, 2 = radioFolder, 3 = checkOffOnly, 4 = checkHideChildren
         collapsed (Bool) [Optional]:
             True = Folder is collapsed.
             False = Folder is open/expanded.
         hidden (Bool) [Optional]:
             True = Folder is hidden.
             False = Folder is visible.
-                Note: A folder's visibility is ultimately determined by the visibility of the contents within. The
-                default is to have folders set to hidden so that empty folders are not visible. If an item gets added
-                to a folder and that item is set to be visible, the containing folder will become visible as well -
-                even if the folder set to hidden. (Default = `True`)
+                Note: A folder's visibility is ultimately determined by the visibility of the contents within.
+                If an item gets added to a folder and that item is set to be visible, the containing folder will become
+                visible as well - even if the folder set to hidden. (Default = False)
         camera (Element) [Optional]:
             A KML 'LookAt' element that defines the default camera angle to the line.
 
@@ -820,6 +822,7 @@ def folder(name, loose_items, description='', collapsed=True, hidden=True, camer
     name : str
     loose_items : list
     description : str, optional
+    folder_type : int, optional
     collapsed : bool, optional
     hidden : bool, optional
     camera : element, optional
@@ -833,6 +836,22 @@ def folder(name, loose_items, description='', collapsed=True, hidden=True, camer
     new_folder = ET.Element("Folder")
     ET.SubElement(new_folder, "name").text = str(name)
     ET.SubElement(new_folder, "description").text = str(description)
+
+    f_style = ET.SubElement(new_folder, "Style")
+    list_style = ET.SubElement(f_style, "ListStyle")
+
+    if folder_type == 1:
+        folder_type = 'check'
+    elif folder_type == 2:
+        folder_type = 'radioFolder'
+    elif folder_type == 3:
+        folder_type = 'checkOffOnly'
+    elif folder_type == 4:
+        folder_type = 'checkHideChildren'
+    else:
+        folder_type = 'check'
+
+    ET.SubElement(list_style, "listItemType").text = folder_type
 
     if collapsed is False:
         collapsed = 1
