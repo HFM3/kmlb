@@ -891,8 +891,8 @@ def kml(name, features, path=None, description='', styles=None, collapsed=True, 
         features (List):
             A list of the defined point, line, polygon, and/or folder objects to include in the KML
         path (String) [Optional]:
-            The path to the folder where the KML file will be written to. The KML's file name is defined in the path.
-            Necessary folders will be created of they do not exist.
+            The path where the KML file will be written to. The KML's file name is defined in the path.
+            Necessary folders will be created if they do not exist.
             Note: The file path should end '.kml'
         description (String) [Optional]:
                 A small body of descriptive text for the kml.
@@ -975,8 +975,8 @@ def networklink_kml(name, link_path, write_path=None, description='', refresh_in
            link_path (String):
                url to hosted kml
            write_path (String) [Optional]:
-               The path to the folder where the KML file will be written to. The KML's file name is defined in the path.
-               Necessary folders will be created of they do not exist.
+               The path where the KML file will be written to. The KML's file name is defined in the path.
+               Necessary folders will be created if they do not exist.
                Note: The file path should end '.kml'
            description (String) [Optional]:
                    A small body of descriptive text for the kml.
@@ -1211,9 +1211,11 @@ def kmz(kmz_name, kmls, path, files_as_bytes=None, **kwargs):
             kmz_name (String):
                 The name of the KMZ
             kmls (Tuples):
-                 (Layer Name, KML (xml str), foler_type)
+                 (Layer Name, KML as XML str, folder_type)
             path (String) [Optional]:
-                 A small body of descriptive text for the NetworkLink element.
+                The path where the kmz file will be written to. The KMz's file name is defined within the path.
+                Necessary folders will be created if they do not exist.
+                Note: The file path should end '.kmz'
             files_as_bytes (Int) [Optional]:
                  Number of seconds between file refreshes. (Default = None)
             kwargs
