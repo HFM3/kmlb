@@ -1,0 +1,432 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+/* ==================================================================
+   KMLB — topographic palette
+   Colors pulled straight from the KMLB mark, matching the hand-built
+   site (index.html / docs.css).
+   ================================================================== */
+
+:root {
+  --kmlb-teal:        #1b8a9b;
+  --kmlb-teal-light:  #74d4e2;
+  --kmlb-teal-deep:   #0f5f6b;
+  --kmlb-amber:       #f2a81d;
+  --kmlb-amber-light: #f6c84a;
+  --kmlb-green:       #36c23f;
+  --kmlb-green-light: #b9f0a3;
+  --kmlb-red:         #e8472a;
+
+  /* Accent role — the single knob for the site's accent color. Point these at
+     any palette hue (teal / amber / green / red) to re-theme everything below.
+     --kmlb-accent-rgb is the same color as channels, for translucent fills. */
+  --kmlb-accent:       var(--kmlb-amber);
+  --kmlb-accent-light: var(--kmlb-amber-light);
+  --kmlb-accent-rgb:   242, 168, 29;
+  --kmlb-inline-code:  #c9d4da;  /* neutral mono, so dense code-heavy table columns stay calm; the subtle pill background already marks it as code */
+  --kmlb-col-param:    var(--kmlb-amber-light);  /* 1st table column: the parameter / key */
+  --kmlb-col-type:     var(--kmlb-teal-light);   /* 2nd table column: its type / value */
+
+  --kmlb-ink:    #07090b;
+  --kmlb-ink-2:  #0d1216;
+  --kmlb-ink-3:  #131a20;
+  --kmlb-code:   #0d1117;
+  --kmlb-text:   #e8eef2;
+  --kmlb-muted:  #8b9aa4;
+  --kmlb-line:   rgba(255, 255, 255, 0.08);
+}
+
+/* ━━━ SLATE (dark) — the only scheme, matching the original site ━━━━ */
+[data-md-color-scheme="slate"] {
+  --md-hue: 205;
+
+  --md-primary-fg-color:              var(--kmlb-ink-2);
+  --md-primary-fg-color--light:       var(--kmlb-ink-3);
+  --md-primary-fg-color--dark:        var(--kmlb-ink);
+  --md-primary-bg-color:              var(--kmlb-text);
+  --md-accent-fg-color:               var(--kmlb-accent-light);
+  --md-accent-fg-color--transparent:  rgba(var(--kmlb-accent-rgb), 0.12);
+
+  --md-default-bg-color:              var(--kmlb-ink);
+  --md-default-fg-color:              rgba(232, 238, 242, 0.90);
+  --md-default-fg-color--light:       rgba(232, 238, 242, 0.58);
+  --md-default-fg-color--lighter:     rgba(232, 238, 242, 0.34);
+  --md-default-fg-color--lightest:    rgba(232, 238, 242, 0.08);
+
+  --md-code-bg-color:                 var(--kmlb-code);
+  --md-code-fg-color:                 #c9d4da;
+  --md-code-hl-color:                 rgba(var(--kmlb-accent-rgb), 0.18);
+
+  --md-typeset-a-color:               var(--kmlb-accent-light);
+}
+
+/* ━━━ TYPOGRAPHY ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+body, .md-typeset { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+.md-typeset { font-size: 0.85rem; line-height: 1.75; }
+
+/* Material scales the root font-size up on wide viewports (137.5% at 100em,
+   150% at 125em), which oversizes body prose on desktop monitors. Pull the
+   content font-size back down at those breakpoints so the body stays readable,
+   leaving the header/nav chrome scaling untouched. */
+@media screen and (min-width: 100em) {
+  .md-typeset { font-size: 0.66rem; }
+}
+@media screen and (min-width: 125em) {
+  .md-typeset { font-size: 0.6rem; }
+}
+code, .md-typeset code, pre, .md-typeset pre {
+  font-family: 'IBM Plex Mono', monospace !important;
+  font-size: 0.9em;
+}
+
+.md-typeset h1 {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: rgba(232, 238, 242, 0.97);
+}
+
+.md-typeset h2 {
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  margin-top: 2.5em;
+  padding-bottom: 0.4em;
+  border-bottom: 1px solid var(--kmlb-line);
+}
+
+.md-typeset h3 {
+  font-weight: 600;
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--kmlb-accent-light);
+}
+
+.md-typeset :not(pre) > code {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
+  padding: 0.1em 0.38em;
+  color: var(--kmlb-inline-code);
+}
+
+/* ━━━ HEADER ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.md-header {
+  background: var(--kmlb-ink-2);
+  border-bottom: 1px solid var(--kmlb-line);
+  box-shadow: none;
+}
+
+.kmlb-breadcrumb {
+  display: flex !important;
+  align-items: center;
+  gap: 0.4rem;
+}
+.kmlb-site-link {
+  color: var(--kmlb-amber-light) !important;
+  font-weight: 700;
+}
+.kmlb-home-link,
+.kmlb-home-link:visited {
+  color: rgba(232, 238, 242, 0.92) !important;
+  text-decoration: none !important;
+}
+.kmlb-home-link:hover { opacity: 0.80; }
+.kmlb-sep {
+  color: rgba(232, 238, 242, 0.20);
+  font-weight: 400;
+  user-select: none;
+}
+
+/* ━━━ TOP ACCENT BAR — animated four-hue gradient from the site ━━━━━ */
+.md-header::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg,
+    var(--kmlb-amber) 0%, var(--kmlb-green) 25%, var(--kmlb-teal) 50%,
+    var(--kmlb-red) 75%, var(--kmlb-amber) 100%);
+  background-size: 200% 100%;
+  animation: kmlb-slide 14s linear infinite;
+  z-index: 1;
+}
+@keyframes kmlb-slide { to { background-position: 200% 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .md-header::before { animation: none; }
+}
+
+/* ━━━ SIDEBAR + TOC ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.md-nav__item--section > .md-nav__link {
+  font-size: 0.62rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+  color: rgba(232, 238, 242, 0.38) !important;
+}
+.md-nav--primary .md-nav__item--active > .md-nav__link,
+.md-nav--primary .md-nav__link--active {
+  color: var(--kmlb-accent-light) !important;
+  font-weight: 600;
+}
+
+/* ━━━ CODE BLOCKS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.md-typeset .highlight {
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--kmlb-line);
+}
+.md-typeset .highlight pre {
+  border-top: 3px solid var(--kmlb-accent);
+  border-radius: 0;
+  margin: 0;
+}
+
+/* Pygments token colors matched to the hand-built site */
+[data-md-color-scheme="slate"] .highlight .c,
+[data-md-color-scheme="slate"] .highlight .c1,
+[data-md-color-scheme="slate"] .highlight .cm { color: #6b7983; font-style: italic; }
+[data-md-color-scheme="slate"] .highlight .k,
+[data-md-color-scheme="slate"] .highlight .kn,
+[data-md-color-scheme="slate"] .highlight .kc { color: #3fb6c7; }
+[data-md-color-scheme="slate"] .highlight .s,
+[data-md-color-scheme="slate"] .highlight .s1,
+[data-md-color-scheme="slate"] .highlight .s2 { color: #7bee7b; }
+[data-md-color-scheme="slate"] .highlight .mi,
+[data-md-color-scheme="slate"] .highlight .mf { color: #b98cf0; }
+[data-md-color-scheme="slate"] .highlight .nb,
+[data-md-color-scheme="slate"] .highlight .nf { color: #ffd527; }
+[data-md-color-scheme="slate"] .highlight .o,
+[data-md-color-scheme="slate"] .highlight .ow,
+[data-md-color-scheme="slate"] .highlight .p { color: #9aabb3; }
+[data-md-color-scheme="slate"] .highlight .n,
+[data-md-color-scheme="slate"] .highlight .na { color: #c9d4da; }
+
+/* ━━━ TABLES ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.md-typeset table:not([class]) {
+  width: 100%;
+  font-size: 0.9em;
+  border-collapse: collapse;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--kmlb-line);
+}
+.md-typeset table:not([class]) th {
+  background: var(--kmlb-ink-2);
+  color: rgba(232, 238, 242, 0.90);
+  font-weight: 600;
+  font-size: 0.8em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.md-typeset table:not([class]) td code,
+.md-typeset table:not([class]) th code { white-space: nowrap; }
+/* Make the rounded pill behind code in table cells clearer than the
+   faint default used in body prose. */
+.md-typeset table:not([class]) td code,
+.md-typeset table:not([class]) th code {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 0.12em 0.4em;
+}
+
+/* Color the leading columns so parameter tables read at a glance:
+   column 1 (the parameter / key) and column 2 (its type / value) each take a
+   hue; later columns (default, description) keep the neutral inline-code color. */
+.md-typeset table:not([class]) td:first-child code { color: var(--kmlb-col-param); font-weight: 600; }
+.md-typeset table:not([class]) td:nth-child(2) code { color: var(--kmlb-col-type); }
+
+/* ━━━ ADMONITIONS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.md-typeset .admonition, .md-typeset details {
+  border-radius: 6px;
+  border-width: 0 0 0 4px;
+  box-shadow: none;
+  font-size: 0.9em;
+}
+
+/* ━━━ HERO — page banner, mirrors the site's doc-hero ━━━━━━━━━━━━━━━ */
+.kmlb-hero {
+  position: relative;
+  background: var(--kmlb-ink-2);
+  border-radius: 8px;
+  padding: 1.4rem 1.8rem;
+  margin: -0.5rem 0 1.75rem;
+  overflow: hidden;
+}
+.kmlb-hero::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 4px; height: 100%;
+  background: var(--kmlb-accent);
+}
+.kmlb-hero__eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--kmlb-accent-light);
+  margin-bottom: 0.5em;
+}
+.kmlb-hero__title {
+  font-size: 1.9em !important;
+  font-weight: 800 !important;
+  line-height: 1.1 !important;
+  letter-spacing: -0.025em !important;
+  color: rgba(232, 238, 242, 0.97) !important;
+  margin: 0 0 0.7rem !important;
+  border: none !important;
+  padding: 0 !important;
+}
+.kmlb-hero__sub {
+  font-size: 1.05em;
+  line-height: 1.65;
+  color: rgba(232, 238, 242, 0.55);
+  margin: 0;
+}
+.kmlb-hero :not(pre) > code {
+  background: transparent !important;
+  color: var(--kmlb-inline-code) !important;
+  padding: 0 !important;
+}
+
+/* ━━━ MODULE CARDS (docs home) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.md-typeset .grid.cards > ul > li {
+  border: 1px solid var(--kmlb-line) !important;
+  border-top: 3px solid var(--kmlb-accent) !important;
+  border-radius: 8px !important;
+  background: rgba(255, 255, 255, 0.02) !important;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+.md-typeset .grid.cards > ul > li:hover {
+  box-shadow: 0 4px 18px rgba(var(--kmlb-accent-rgb), 0.14) !important;
+  border-color: var(--kmlb-accent) !important;
+}
+
+/* ━━━ COLOR SWATCH GRID ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.md-typeset .swatch-grid {
+  /* !important beats Material's `.md-typeset ul:not([hidden]){display:flow-root}`
+     (specificity 0,2,1), which otherwise forces the grid back into a list. */
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 0.5rem;
+  margin: 1rem 0;
+  padding: 0;
+  list-style: none;
+}
+.md-typeset .swatch-grid li {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin: 0;
+  font-size: 0.82em;
+  font-family: 'IBM Plex Mono', monospace;
+  color: rgba(232, 238, 242, 0.78);
+}
+.md-typeset .swatch-grid li::before {
+  content: "";
+  flex-shrink: 0;
+  width: 1em;
+  height: 1em;
+  border-radius: 3px;
+  border: 1px solid rgba(232, 238, 242, 0.25);
+  background: var(--c);
+}
+
+/* ━━━ ICON GRID ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.md-typeset .icon-grid {
+  /* !important beats Material's `.md-typeset ul:not([hidden]){display:flow-root}`
+     (specificity 0,2,1), which otherwise forces the grid back into a list. */
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 0.6rem;
+  margin: 1rem 0;
+  padding: 0;
+  list-style: none;
+}
+.md-typeset .icon-grid li {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin: 0;
+  padding: 0.4em 0.6em;
+  font-size: 0.8em;
+  font-family: 'IBM Plex Mono', monospace;
+  color: rgba(232, 238, 242, 0.78);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--kmlb-line);
+  border-radius: 6px;
+}
+.md-typeset .icon-grid li img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+/* ━━━ LAYOUT WIDTH ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+@media screen and (min-width: 76.25em) {
+  .md-grid { max-width: 68rem; }
+}
+
+/* ━━━ FOOTER ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.md-footer { background: var(--kmlb-ink-2); border-top: 1px solid var(--kmlb-line); }
+.md-footer-meta { background: var(--kmlb-ink); }
+
+/* ━━━ HOME "WHAT'S INSIDE" TABLE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Rows whose first cell is a link (the Section column) get a bold, clearly
+   clickable treatment and a hover affordance. :has() scopes this to that
+   table, leaving the code-keyed reference tables untouched. */
+.md-typeset table:not([class]) td:first-child a {
+  font-weight: 700;
+}
+.md-typeset table:not([class]) td:first-child a:hover {
+  text-decoration: underline;
+}
+.md-typeset table:not([class]) tbody tr:has(td:first-child a) {
+  transition: background-color 0.12s ease;
+}
+.md-typeset table:not([class]) tbody tr:has(td:first-child a):hover {
+  background: rgba(var(--kmlb-accent-rgb), 0.08);
+}
+
+/* Showcase image: span the full content width but crop it vertically into a
+   banner so it doesn't take up too much height. The .glightbox class sits on
+   the <a> wrapper; the click-to-zoom lightbox still shows the full image. */
+.md-typeset a.glightbox {
+  display: block;
+  margin: 1.5rem 0 0;
+}
+.md-typeset a.glightbox img {
+  width: 100%;
+  height: 320px;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 8px;
+}
+
+/* Showcase image caption: centered and subtle. */
+.md-typeset .kmlb-caption {
+  text-align: center;
+  color: var(--md-default-fg-color--light);
+  font-size: 0.8em;
+  margin-top: 0.5rem;
+}
+
+/* ━━━ FROSTY-WHITE TIP + LIGHTBULB ICON (ported from arcsmith) ━━━━━━ */
+.md-typeset .admonition.tip, .md-typeset details.tip {
+  border-color: #AFC6D2;
+}
+.md-typeset .tip > .admonition-title, .md-typeset .tip > summary {
+  background: rgba(190, 212, 226, 0.14);
+}
+.md-typeset .tip > .admonition-title::before, .md-typeset .tip > summary::before {
+  background-color: #6E8C9E;
+}
+[data-md-color-scheme="slate"] .md-typeset .admonition.tip {
+  border-color: rgba(208, 226, 238, 0.55);
+}
+[data-md-color-scheme="slate"] .md-typeset .tip > .admonition-title {
+  background: rgba(208, 226, 238, 0.06);
+}
+[data-md-color-scheme="slate"] .md-typeset .tip > .admonition-title::before {
+  background-color: rgba(208, 226, 238, 0.82);
+}
+/* Swap tip's default flame glyph for a lightbulb (mask shape; color set above) */
+:root {
+  --md-admonition-icon--tip: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12,2A7,7 0 0,1 19,9C19,11.38 17.81,13.47 16,14.74V17A1,1 0 0,1 15,18H9A1,1 0 0,1 8,17V14.74C6.19,13.47 5,11.38 5,9A7,7 0 0,1 12,2M9,21V20H15V21A1,1 0 0,1 14,22H10A1,1 0 0,1 9,21M12,4A5,5 0 0,0 7,9C7,11.05 8.23,12.81 10,13.58V16H14V13.58C15.77,12.81 17,11.05 17,9A5,5 0 0,0 12,4Z"/></svg>');
+}

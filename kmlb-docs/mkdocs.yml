@@ -1,0 +1,73 @@
+site_name: kmlb
+site_description: A dependency-free Python library for building Google Earth KML files.
+site_url: https://kmlb.dev/docs/
+repo_name: kmlb
+repo_url: https://github.com/HFM3/kmlb
+
+hooks:
+  - hooks/copy_homepage.py
+
+docs_dir: docs
+site_dir: site/docs
+
+theme:
+  name: material
+  custom_dir: docs/overrides
+  logo: stylesheets/kmlb-mark.svg
+  favicon: stylesheets/kmlb-mark.svg
+  palette:
+    scheme: slate
+    primary: custom
+    accent: custom
+  font:
+    text: IBM Plex Sans
+    code: IBM Plex Mono
+  icon:
+    repo: fontawesome/brands/github
+  features:
+    - navigation.tracking
+    - navigation.top
+    - navigation.indexes
+    - toc.follow
+    - content.code.copy
+    - content.code.annotate
+
+extra_css:
+  - stylesheets/kmlb.css
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - admonition
+  - pymdownx.details
+  - tables
+  - attr_list
+  - md_in_html
+  - pymdownx.tabbed:
+      alternate_style: true
+  - toc:
+      permalink: false
+      title: On this page
+
+plugins:
+  - search
+  - glightbox
+
+nav:
+  - kmlb.dev: https://kmlb.dev
+  - Docs home: index.md
+  - Tutorial: tutorial.md
+  - API Reference:
+      - Getting Started: reference/getting_started.md
+      - Features: reference/features.md
+      - Styles: reference/styles.md
+      - Views & Export: reference/views_export.md
+      - Geodesy: reference/geodesy.md
+      - Shapes: reference/shapes.md
+      - Colors & Icons: reference/colors_icons.md
+  - Cite: cite.md

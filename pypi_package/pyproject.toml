@@ -1,0 +1,58 @@
+[build-system]
+requires = ["hatchling >= 1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "kmlb"
+version = "0.1.0"
+
+description = "A straightforward Google Earth KML builder"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+    { name = "Henry F. Mros, III" },
+]
+keywords = [
+    "kml",
+    "google-earth",
+    "keyhole",
+    "geospatial",
+    "gis",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: GIS",
+]
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
+
+[project.urls]
+Homepage = "https://github.com/HFM3/kmlb"
+Documentation = "https://kmlb.dev/"
+Repository = "https://github.com/HFM3/kmlb"
+Issues = "https://github.com/HFM3/kmlb/issues"
+Changelog = "https://github.com/HFM3/kmlb/blob/main/pypi_package/CHANGELOG.md"
+
+# Explicit allowlist: only these paths ship in the source distribution.
+# Anything else in the build directory (docs site, legacy backups, dist
+# artifacts, caches) cannot be bundled, regardless of .gitignore state or
+# build cwd.
+[tool.hatch.build.targets.sdist]
+# Note: Hatchling force-includes the nearest .gitignore in every sdist and this
+# cannot be disabled via config. A package-local pypi_package/.gitignore keeps
+# it from walking up and bundling the monorepo-root ignore file.
+include = [
+    "src/kmlb",
+    "tests",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "pyproject.toml",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/kmlb"]

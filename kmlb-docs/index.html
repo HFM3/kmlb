@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>KMLB &middot; Python KML builder for Google Earth</title>
+<meta name="description" content="Build Google Earth KML files in plain Python. KMLB is a dependency-free library for points, lines, polygons, styles, folders." />
+<link rel="icon" type="image/svg+xml" href="docs/stylesheets/kmlb-mark.svg" />
+
+<!-- SEO: canonical, crawl, authorship -->
+<link rel="canonical" href="https://kmlb.dev/" />
+<meta name="author" content="Henry F. Mros, III" />
+<meta name="robots" content="index, follow, max-image-preview:large" />
+<meta name="theme-color" content="#0d1216" />
+
+<!-- Open Graph (link previews) -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="KMLB" />
+<meta property="og:title" content="KMLB · Plain Python KML builder for Google Earth" />
+<meta property="og:description" content="Build Google Earth KML files in plain Python. A dependency-free library for points, lines, polygons, styles, and folders." />
+<meta property="og:url" content="https://kmlb.dev/" />
+<meta property="og:image" content="https://kmlb.dev/docs/assets/img/social-card.jpg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="KMLB logo over 3D building footprints in Google Earth." />
+
+<!-- Twitter / X card -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="KMLB · Plain Python KML builder for Google Earth" />
+<meta name="twitter:description" content="Build Google Earth KML files in plain Python, with no XML." />
+<meta name="twitter:image" content="https://kmlb.dev/docs/assets/img/social-card.jpg" />
+
+<!-- Structured data: search engines read this as software -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "KMLB",
+  "alternateName": "Python KML builder",
+  "description": "Build Google Earth KML files in plain Python. A dependency-free library for points, lines, polygons, styles, folders, and 3D.",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Cross-platform (Python 3.9+)",
+  "programmingLanguage": "Python",
+  "softwareVersion": "__KMLB_VERSION__",
+  "url": "https://kmlb.dev/",
+  "downloadUrl": "https://pypi.org/project/kmlb/",
+  "codeRepository": "https://github.com/HFM3/kmlb",
+  "license": "https://opensource.org/licenses/MIT",
+  "author": { "@type": "Person", "name": "Henry F. Mros, III" },
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+<style>
+  :root {
+    /* Palette pulled straight from the KMLB topographic mark */
+    --teal:        #1b8a9b;
+    --teal-deep:   #0f5f6b;
+    --amber:       #f2a81d;
+    --amber-light: #f6c84a;
+    --green:       #36c23f;
+    --green-light: #b9f0a3;
+    --red:         #e8472a;
+    --snow:        #dfe4e8;
+
+    --ink:    #07090b;
+    --ink-2:  #0d1216;
+    --ink-3:  #131a20;
+    --line:   rgba(255,255,255,0.08);
+    --text:   #e8eef2;
+    --muted:  #8b9aa4;
+
+    --radius: 14px;
+    --maxw:   720px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body { height: 100%; }
+
+  body {
+    margin: 0;
+    background: var(--ink);
+    color: var(--text);
+    font-family: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+    position: relative;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ---- Layered background -------------------------------------------- */
+
+  /* Soft colored glows echoing the logo's regions */
+  .glows {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100vh;
+    height: 100lvh;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(46vmax 46vmax at 22% 26%, rgba(242,168,29,0.20), transparent 60%),
+      radial-gradient(52vmax 52vmax at 80% 30%, rgba(27,138,155,0.30), transparent 62%),
+      radial-gradient(44vmax 44vmax at 68% 72%, rgba(54,194,63,0.18),  transparent 60%),
+      radial-gradient(60vmax 50vmax at 50% 98%, rgba(232,71,42,0.18),  transparent 64%);
+    filter: saturate(115%);
+    animation: drift 24s ease-in-out infinite alternate;
+  }
+
+  @keyframes drift {
+    from { transform: translate3d(-1.5%, -1%, 0) scale(1.02); }
+    to   { transform: translate3d( 1.5%,  1%, 0) scale(1.06); }
+  }
+
+  /* Concentric topographic contour lines */
+  .contours {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100vh;
+    height: 100lvh;
+    z-index: 0;
+    pointer-events: none;
+    display: grid;
+    place-items: center;
+    opacity: 0.5;
+    -webkit-mask-image: radial-gradient(60% 60% at 50% 45%, #000 35%, transparent 78%);
+            mask-image: radial-gradient(60% 60% at 50% 45%, #000 35%, transparent 78%);
+  }
+  .contours svg { width: min(150vh, 150vw); height: min(150vh, 150vw); }
+  .contours polygon {
+    fill: none;
+    stroke: var(--teal);
+    stroke-width: 1;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+    opacity: 0.22;
+  }
+  .contours .ring { animation: breathe 18s ease-in-out infinite; transform-origin: 50% 52%; }
+
+  @keyframes breathe {
+    0%, 100% { transform: scale(1);    opacity: 0.55; }
+    50%      { transform: scale(1.035); opacity: 0.9; }
+  }
+
+  /* Fine grain to kill banding */
+  .grain {
+    position: fixed; top: 0; left: 0; right: 0; height: 100vh; height: 100lvh; z-index: 1; pointer-events: none; opacity: 0.045;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Top accent bar in the four logo hues */
+  .topbar {
+    position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 5;
+    /* Ends on the start hue (amber) so the repeated tile loops with no seam. */
+    background: linear-gradient(90deg,
+      var(--amber) 0%, var(--green) 25%, var(--teal) 50%, var(--red) 75%, var(--amber) 100%);
+    background-size: 200% 100%;
+    animation: slide 14s linear infinite;
+  }
+  @keyframes slide { to { background-position: 200% 0; } }
+
+  /* ---- Content ------------------------------------------------------- */
+
+  main {
+    position: relative;
+    z-index: 2;
+    flex: 1;
+    width: 100%;
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding: clamp(3.2rem, 10vh, 7rem) 1.5rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .logo-wrap {
+    position: relative;
+    display: inline-block;
+    line-height: 0;
+  }
+  /* The glow lives on a static layer behind the logo, so the moving image
+     never re-rasterizes an expensive blurred drop-shadow each frame. */
+  .logo-wrap::after {
+    content: "";
+    position: absolute;
+    inset: -8%;
+    z-index: -1;
+    border-radius: 32%;
+    background: radial-gradient(closest-side, rgba(27,138,155,0.62), rgba(27,138,155,0) 72%);
+    filter: blur(48px);
+  }
+  .logo {
+    width: clamp(190px, 40vw, 280px);
+    height: auto;
+    display: block;
+    opacity: 0;
+    filter: drop-shadow(0 20px 34px rgba(0,0,0,0.55));
+    /* Promote to its own compositing layer so the float is a cheap layer
+       transform (no per-frame filter/raster work) -> smooth motion. */
+    will-change: transform;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    /* fade drives opacity (held via forwards); float drives transform. */
+    animation: fade 1s ease 0.15s forwards;
+  }
+  @keyframes float {
+    0%, 100% { transform: translate3d(0, 0, 0); }
+    50%      { transform: translate3d(0, -9px, 0); }
+  }
+
+  .eyebrow {
+    display: inline-block;
+    margin: 2.8rem 0 0;
+    padding: 0.5rem 1.05rem;
+    font-size: clamp(0.84rem, 2.2vw, 1.04rem);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: #74d4e2;
+    border: 1px solid rgba(27,138,155,0.5);
+    border-radius: 999px;
+    background: rgba(27,138,155,0.13);
+    box-shadow: 0 0 28px rgba(27,138,155,0.28), inset 0 1px 0 rgba(255,255,255,0.07);
+    opacity: 0; animation: fade 0.8s ease 0.5s forwards;
+  }
+
+  h1 {
+    margin: 1.7rem 0 0;
+    max-width: 100%;
+    overflow-wrap: break-word;
+    font-size: clamp(2.4rem, 8vw, 4rem);
+    font-weight: 800;
+    line-height: 1.04;
+    letter-spacing: -0.02em;
+    background: linear-gradient(180deg, #ffffff 0%, #aeb9c0 100%);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 4px 26px rgba(27,138,155,0.22));
+    opacity: 0; animation: fade 0.8s ease 0.6s forwards;
+  }
+
+  .lede {
+    margin: 1.9rem auto 0;
+    max-width: 46ch;
+    color: var(--muted);
+    font-size: clamp(1rem, 2.4vw, 1.12rem);
+    line-height: 1.6;
+    opacity: 0; animation: fade 0.8s ease 0.75s forwards;
+  }
+  .lede b { color: var(--text); font-weight: 600; }
+
+  @keyframes fade { to { opacity: 1; } }
+
+  /* Install chip */
+  .install {
+    margin-top: 3.3rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.7rem 0.8rem 0.7rem 1.1rem;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+    font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.98rem;
+    opacity: 0; animation: fade 0.8s ease 0.9s forwards;
+  }
+  .install .prompt { color: var(--teal); user-select: none; }
+  .install code { color: var(--text); }
+  .install .pkg { color: var(--amber-light); }
+  .copy {
+    border: 1px solid var(--line);
+    background: rgba(255,255,255,0.03);
+    color: var(--muted);
+    border-radius: 9px;
+    padding: 0.4rem 0.7rem;
+    font: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .copy:hover { color: var(--text); border-color: var(--teal); background: rgba(27,138,155,0.12); }
+  .copy.done { color: var(--green-light); border-color: var(--green); background: rgba(54,194,63,0.12); }
+
+  /* Action buttons */
+  .actions {
+    margin-top: 2.6rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.95rem;
+    justify-content: center;
+    opacity: 0; animation: fade 0.8s ease 1.05s forwards;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.72rem 1.25rem;
+    border-radius: var(--radius);
+    text-decoration: none;
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 0.95rem;
+    line-height: 1.2;
+    cursor: pointer;
+    border: 1px solid var(--line);
+    color: var(--text);
+    background: rgba(255,255,255,0.03);
+    transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  }
+  .btn svg { width: 18px; height: 18px; }
+  #cite-open svg { width: 15px; height: 15px; }
+  .btn:hover { transform: translateY(-2px); }
+  .btn--ghost:hover { border-color: var(--amber); background: rgba(242,168,29,0.1); box-shadow: 0 10px 26px rgba(0,0,0,0.4); }
+
+  footer {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    padding: 1.5rem 1.5rem 2.4rem;
+    color: var(--muted);
+    font-size: 0.82rem;
+    opacity: 0; animation: fade 0.8s ease 1.2s forwards;
+  }
+  footer .dot { margin: 0 0.5rem; opacity: 0.4; }
+  footer a { color: var(--muted); text-decoration: none; border-bottom: 1px solid transparent; transition: all 0.15s ease; }
+  footer a:hover { color: var(--text); border-color: var(--teal); }
+  .footer-social { display: flex; justify-content: center; gap: 1.1rem; margin-top: 0.95rem; }
+  .footer-social a { display: inline-flex; color: var(--muted); border-bottom: none; transition: color 0.15s ease; }
+  .footer-social a:hover { color: var(--text); border-bottom: none; }
+  .footer-social svg { width: 19px; height: 19px; display: block; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .glows, .topbar, .logo, .ring { animation: none !important; }
+    .logo, .eyebrow, h1, .lede, .install, .actions, footer { opacity: 1 !important; transform: none !important; }
+  }
+
+  @media (max-width: 560px) {
+    main { padding: 1.5rem 1.25rem 1rem; justify-content: center; }
+    .logo { width: 162px; }
+    .eyebrow { margin-top: 1.3rem; font-size: 0.7rem; letter-spacing: 0.1em; padding: 0.4rem 0.8rem; }
+    h1 { margin-top: 0.7rem; font-size: clamp(1.7rem, 8vw, 2.2rem); width: 100%; }
+    .lede { margin-top: 0.95rem; font-size: 0.94rem; line-height: 1.55; width: 100%; max-width: 100%; }
+    .install {
+      margin-top: 1.5rem; padding: 0.55rem 0.6rem 0.55rem 0.95rem;
+      font-size: 0.92rem; gap: 0.6rem; max-width: 100%;
+      justify-content: center; flex-wrap: wrap;
+    }
+    .actions { margin-top: 1.2rem; width: 100%; flex-direction: column; align-items: stretch; gap: 0.6rem; }
+    .btn { width: 100%; justify-content: center; padding: 0.62rem 1rem; font-size: 0.92rem; }
+    .btn svg { width: 16px; height: 16px; }
+    footer { padding: 1.2rem 1.25rem; }
+  }
+
+  /* ---- License / copyright section ----------------------------------- */
+  .license {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    width: 100%;
+    max-width: 46ch;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 0.86rem;
+    line-height: 1.65;
+    /* Justify for clean straight edges; pretty avoids a lone dangling word on
+       the last line, and hyphenation keeps the gaps tight. */
+    text-align: justify;
+    text-wrap: pretty;
+    hyphens: auto;
+    opacity: 0; animation: fade 0.8s ease 1.15s forwards;
+  }
+  .license b { color: var(--text); font-weight: 600; }
+  .license em { font-style: italic; color: #aeb9c0; }
+  .license a { color: var(--muted); text-decoration: none; border-bottom: 1px solid transparent; transition: all 0.15s ease; }
+  .license a:hover { color: var(--text); border-color: var(--teal); }
+  .license .copyright { display: block; margin-top: 0.55rem; font-size: 0.8rem; color: var(--muted); text-align: center; }
+
+  /* ---- Cite modal ---------------------------------------------------- */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(7,9,11,0.75);
+    -webkit-backdrop-filter: blur(4px);
+            backdrop-filter: blur(4px);
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    width: 100%;
+    max-width: 540px;
+    background: var(--ink-2);
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--teal);
+    border-radius: var(--radius);
+    box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+    animation: modal-in 0.18s ease;
+  }
+  @keyframes modal-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.1rem 1.4rem 0.9rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .modal-title {
+    font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.7rem; font-weight: 700;
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--muted);
+  }
+  .modal-close {
+    flex-shrink: 0;
+    width: 28px; height: 28px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--muted);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .modal-close:hover { color: var(--text); border-color: var(--teal); background: rgba(27,138,155,0.12); }
+
+  .modal-body { padding: 1.3rem 1.4rem 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+
+  .cite-tabs { display: flex; }
+  .cite-tab {
+    padding: 0.34em 0.9em;
+    font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.7rem; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    border: 1px solid var(--line);
+    border-right: none;
+    background: rgba(255,255,255,0.02);
+    color: var(--muted);
+    cursor: pointer;
+    transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+  }
+  .cite-tab:first-child { border-radius: 8px 0 0 8px; }
+  .cite-tab:last-child  { border-right: 1px solid var(--line); border-radius: 0 8px 8px 0; }
+  .cite-tab.active {
+    position: relative; z-index: 1;
+    color: #74d4e2; background: rgba(27,138,155,0.14);
+    border-color: rgba(27,138,155,0.5);
+    /* Restore a right border so the active tab glows on all four edges; the
+       negative margin laps it over the neighbor so nothing shifts. */
+    border-right: 1px solid rgba(27,138,155,0.5);
+    margin-right: -1px;
+  }
+
+  .cite-pane { display: none; position: relative; }
+  .cite-pane.active { display: block; }
+
+  .cite-text {
+    position: relative;
+    margin: 0;
+    font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.78rem; line-height: 1.8;
+    color: var(--muted);
+    word-break: break-word;
+    text-wrap: pretty;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 1rem 3rem 1rem 1.1rem;
+    text-align: left;
+  }
+  .cite-text .ca { color: var(--text); font-weight: 600; }
+  .cite-text .ct { font-style: italic; color: var(--text); }
+  .cite-text .cu { color: var(--amber-light); }
+
+  .cite-copy {
+    position: absolute;
+    top: 0.6rem; right: 0.6rem;
+    width: 28px; height: 28px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .cite-copy:hover { color: var(--text); border-color: var(--teal); background: rgba(27,138,155,0.12); }
+  .cite-copy.done  { color: var(--green-light); border-color: var(--green); background: rgba(54,194,63,0.12); }
+  .cite-copy svg { width: 14px; height: 14px; }
+  .cite-copy .check-icon { display: none; }
+  .cite-copy.done .copy-icon { display: none; }
+  .cite-copy.done .check-icon { display: block; }
+
+  .cite-hint {
+    font-size: 0.74rem;
+    line-height: 1.6;
+    color: var(--muted);
+    opacity: 0.85;
+  }
+  .cite-hint code {
+    font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.88em;
+    background: rgba(255,255,255,0.06);
+    padding: 0.1em 0.35em;
+    border-radius: 4px;
+    color: var(--text);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .license { opacity: 1 !important; }
+    .modal { animation: none !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="topbar"></div>
+  <div class="glows"></div>
+  <div class="contours" aria-hidden="true">
+    <svg viewBox="0 0 400 400" preserveAspectRatio="xMidYMid meet">
+      <g class="ring">
+        <!-- Concentric rounded triangles echoing the topographic mark -->
+        <polygon points="200,52 348,344 52,344" />
+        <polygon points="200,92 322,330 78,330" />
+        <polygon points="200,132 296,316 104,316" />
+        <polygon points="200,172 270,302 130,302" />
+        <polygon points="200,212 244,288 156,288" />
+        <polygon points="200,248 224,278 176,278" />
+      </g>
+    </svg>
+  </div>
+  <div class="grain" aria-hidden="true"></div>
+
+  <main>
+    <div class="logo-wrap"><img class="logo" src="docs/stylesheets/kmlb-logo.svg" alt="KMLB, a plain-Python Google Earth KML builder" width="411" height="441" /></div>
+
+    <p class="eyebrow">Google&nbsp;Earth&nbsp;KML&nbsp;Builder</p>
+    <h1>KML w/out XML</h1>
+    <p class="lede">
+      <b>Plain Python KML Builder</b>
+      <br>
+      KMLB is a dependency-free Python library for writing Google&nbsp;Earth
+      KML files. Easily create points, lines, polygons, styles, and folders.
+    </p>
+
+    <div class="install">
+      <span class="prompt">$</span>
+      <code>pip install <span class="pkg">kmlb</span></code>
+      <button class="copy" id="copy" type="button" aria-label="Copy install command">Copy</button>
+    </div>
+
+    <div class="actions">
+      <a class="btn btn--ghost" href="docs/">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        Documentation
+      </a>
+      <a class="btn btn--ghost" href="docs/tutorial/">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        Tutorial
+      </a>
+      <button class="btn btn--ghost" type="button" id="cite-open">
+        Cite
+      </button>
+    </div>
+
+    <section class="license">
+      <p>KMLB is free and open-source software released under the
+      <a href="https://github.com/HFM3/kmlb" target="_blank" rel="noopener">MIT&nbsp;License</a>.
+      You're free to use, modify, and distribute it. <em>A citation</em> is not required under the MIT license, but documented use builds trust in&nbsp;the&nbsp;tool.
+      <span class="copyright">&copy;&nbsp;2020&ndash;__KMLB_YEAR__ Henry&nbsp;F.&nbsp;Mros,&nbsp;III</span></p>
+    </section>
+  </main>
+
+  <!-- Cite modal -->
+  <div class="modal-overlay" id="cite-modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="cite-modal-title">
+      <div class="modal-header">
+        <span class="modal-title" id="cite-modal-title">Cite KMLB in research</span>
+        <button class="modal-close" type="button" id="cite-close" aria-label="Close">&#10005;</button>
+      </div>
+      <div class="modal-body">
+        <div class="cite-tabs">
+          <button class="cite-tab active" type="button" data-cite="apa">APA</button>
+          <button class="cite-tab" type="button" data-cite="chicago">Chicago</button>
+          <button class="cite-tab" type="button" data-cite="bib">BibTeX</button>
+        </div>
+
+        <div class="cite-pane active" id="cite-apa">
+          <p class="cite-text"><span class="ca">Mros, H. F., III.</span> (<span class="ca">__KMLB_YEAR__</span>). <span class="ct">KMLB: KML builder</span> [Computer software]. Version __KMLB_VERSION__. <span class="cu">https://pypi.org/project/kmlb/</span></p>
+          <button class="cite-copy" type="button" aria-label="Copy citation" title="Copy citation" data-copy="cite-apa">
+            <svg class="copy-icon" viewBox="0 0 20 20" fill="none"><rect x="7" y="7" width="10" height="10" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M4.5 13V4.5C4.5 3.67157 5.17157 3 6 3H13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            <svg class="check-icon" viewBox="0 0 20 20" fill="none"><path d="M4 10.5L8 14.5L16 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+
+        <div class="cite-pane" id="cite-chicago">
+          <p class="cite-text"><span class="ca">Mros, Henry F., III.</span> __KMLB_YEAR__. <span class="ct">KMLB: KML Builder</span>. Version __KMLB_VERSION__. Computer software. <span class="cu">https://pypi.org/project/kmlb/</span></p>
+          <button class="cite-copy" type="button" aria-label="Copy citation" title="Copy citation" data-copy="cite-chicago">
+            <svg class="copy-icon" viewBox="0 0 20 20" fill="none"><rect x="7" y="7" width="10" height="10" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M4.5 13V4.5C4.5 3.67157 5.17157 3 6 3H13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            <svg class="check-icon" viewBox="0 0 20 20" fill="none"><path d="M4 10.5L8 14.5L16 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+
+        <div class="cite-pane" id="cite-bib">
+          <p class="cite-text">@software{KMLB,<br>&nbsp;&nbsp;author&nbsp; = {<span class="ca">Mros, III, Henry F.</span>},<br>&nbsp;&nbsp;title&nbsp;&nbsp; = {KMLB: KML Builder},<br>&nbsp;&nbsp;year&nbsp;&nbsp;&nbsp; = {__KMLB_YEAR__},<br>&nbsp;&nbsp;version = {__KMLB_VERSION__},<br>&nbsp;&nbsp;url&nbsp;&nbsp;&nbsp;&nbsp; = {<span class="cu">https://pypi.org/project/kmlb/</span>}<br>}</p>
+          <button class="cite-copy" type="button" aria-label="Copy citation" title="Copy citation" data-copy="cite-bib">
+            <svg class="copy-icon" viewBox="0 0 20 20" fill="none"><rect x="7" y="7" width="10" height="10" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M4.5 13V4.5C4.5 3.67157 5.17157 3 6 3H13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+            <svg class="check-icon" viewBox="0 0 20 20" fill="none"><path d="M4 10.5L8 14.5L16 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+
+        <p class="cite-hint">Citation is for version __KMLB_VERSION__ (__KMLB_YEAR__). Run <code>pip show kmlb</code> to confirm the version you used.</p>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-meta">
+      <span>MIT&nbsp;Licensed</span>
+    </div>
+    <div class="footer-social">
+      <a href="https://github.com/HFM3/kmlb" aria-label="GitHub" title="GitHub" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.5v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17 4.6 18 4.9 18 4.9c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.6.8.5 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>
+      </a>
+      <a href="https://pypi.org/project/kmlb/" aria-label="PyPI" title="PyPI" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M14.25.18l.9.2.73.26.59.3.45.32.34.34.25.34.16.33.1.3.04.26.02.2-.01.13V8.5l-.05.63-.13.55-.21.46-.26.38-.3.31-.33.25-.35.19-.35.14-.33.1-.3.07-.26.04-.21.02H8.77l-.69.05-.59.14-.5.22-.41.27-.33.32-.27.35-.2.36-.15.37-.1.35-.07.32-.04.27-.02.21v3.06H3.17l-.21-.03-.28-.07-.32-.12-.35-.18-.36-.26-.36-.36-.35-.46-.32-.59-.28-.73-.21-.88-.14-1.05-.05-1.23.06-1.22.16-1.04.24-.87.32-.71.36-.57.4-.44.42-.33.42-.24.4-.16.36-.1.32-.05.24-.01h.16l.06.01h8.16v-.83H6.18l-.01-2.75-.02-.37.05-.34.11-.31.17-.28.25-.26.31-.23.38-.2.44-.18.51-.15.58-.12.64-.1.71-.06.77-.04.84-.02 1.27.05zm-6.3 1.98l-.23.33-.08.41.08.41.23.34.33.22.41.09.41-.09.33-.22.23-.34.08-.41-.08-.41-.23-.33-.33-.22-.41-.09-.41.09zm13.09 3.95l.28.06.32.12.35.18.36.27.36.35.35.47.32.59.28.73.21.88.14 1.04.05 1.23-.06 1.23-.16 1.04-.24.86-.32.71-.36.57-.4.45-.42.33-.42.24-.4.16-.36.09-.32.05-.24.02-.16-.01h-8.22v.82h5.84l.01 2.76.02.36-.05.34-.11.31-.17.29-.25.25-.31.24-.38.2-.44.17-.51.15-.58.13-.64.09-.71.07-.77.04-.84.01-1.27-.04-1.07-.14-.9-.2-.73-.25-.59-.3-.45-.33-.34-.34-.25-.34-.16-.33-.1-.3-.04-.25-.02-.2.01-.13v-5.34l.05-.64.13-.54.21-.46.26-.38.3-.32.33-.24.35-.2.35-.14.33-.1.3-.06.26-.04.21-.02.13-.01h5.84l.69-.05.59-.14.5-.21.41-.28.33-.32.27-.35.2-.36.15-.36.1-.35.07-.32.04-.28.02-.21V6.07h2.09l.14.01zm-6.47 14.25l-.23.33-.08.41.08.41.23.33.33.23.41.08.41-.08.33-.23.23-.33.08-.41-.08-.41-.23-.33-.33-.23-.41-.08-.41.08z"/></svg>
+      </a>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var btn = document.getElementById('copy');
+      if (!btn) return;
+      btn.addEventListener('click', function () {
+        var cmd = 'pip install kmlb';
+        var done = function () {
+          btn.textContent = 'Copied';
+          btn.classList.add('done');
+          setTimeout(function () { btn.textContent = 'Copy'; btn.classList.remove('done'); }, 1600);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(cmd).then(done).catch(done);
+        } else {
+          var t = document.createElement('textarea');
+          t.value = cmd; document.body.appendChild(t); t.select();
+          try { document.execCommand('copy'); } catch (e) {}
+          document.body.removeChild(t); done();
+        }
+      });
+    })();
+
+    /* ---- Cite modal --------------------------------------------------- */
+    (function () {
+      var modal = document.getElementById('cite-modal');
+      if (!modal) return;
+
+      function copyText(text, cb) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(cb).catch(cb);
+        } else {
+          var t = document.createElement('textarea');
+          t.value = text; document.body.appendChild(t); t.select();
+          try { document.execCommand('copy'); } catch (e) {}
+          document.body.removeChild(t); cb();
+        }
+      }
+
+      function open() { modal.classList.add('open'); document.body.style.overflow = 'hidden'; }
+      function close() { modal.classList.remove('open'); document.body.style.overflow = ''; }
+
+      var openBtn = document.getElementById('cite-open');
+      var openLink = document.getElementById('cite-link');
+      var closeBtn = document.getElementById('cite-close');
+      if (openBtn) openBtn.addEventListener('click', open);
+      if (openLink) openLink.addEventListener('click', function (e) { e.preventDefault(); open(); });
+      if (closeBtn) closeBtn.addEventListener('click', close);
+
+      modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && modal.classList.contains('open')) close();
+      });
+
+      /* Tabs */
+      var tabs = modal.querySelectorAll('.cite-tab');
+      tabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+          tabs.forEach(function (t) { t.classList.remove('active'); });
+          modal.querySelectorAll('.cite-pane').forEach(function (p) { p.classList.remove('active'); });
+          tab.classList.add('active');
+          var pane = document.getElementById('cite-' + tab.getAttribute('data-cite'));
+          if (pane) pane.classList.add('active');
+        });
+      });
+
+      /* Copy buttons */
+      modal.querySelectorAll('.cite-copy').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var pane = document.getElementById(btn.getAttribute('data-copy'));
+          if (!pane) return;
+          var textEl = pane.querySelector('.cite-text');
+          var text = (textEl.innerText || textEl.textContent).trim();
+          copyText(text, function () {
+            btn.classList.add('done');
+            setTimeout(function () { btn.classList.remove('done'); }, 1800);
+          });
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

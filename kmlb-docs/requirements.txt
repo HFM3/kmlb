@@ -1,0 +1,4 @@
+# Build dependencies for the kmlb documentation site.
+#   py -m pip install -r requirements.txt
+mkdocs-material
+mkdocs-glightbox
