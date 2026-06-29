@@ -168,7 +168,7 @@ kmlb.kml(
 
 ---
 
-## Citing KIMLB
+## Citing KMLB
 
 Using KMLB in research or published work? A citation is appreciated (it is not
 required under the MIT license, but documented use builds trust in the tool).
