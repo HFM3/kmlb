@@ -101,6 +101,144 @@ def test_look_at_builds_lookat():
     assert cam.find("altitudeMode").text == "absolute"
 
 
+# --- camera ----------------------------------------------------------------
+
+def test_camera_builds_camera():
+    cam = base.camera([-71.0, 42.3, 5], heading=120, tilt=95)
+    assert cam.tag == "Camera"
+    assert cam.find("longitude").text == "-71.0"
+    assert cam.find("latitude").text == "42.3"
+    assert cam.find("altitude").text == "5"
+    assert cam.find("heading").text == "120"
+    assert cam.find("tilt").text == "95"
+    assert cam.find("roll").text == "0.0"
+    # default z_mode is ABS -> absolute
+    assert cam.find("altitudeMode").text == "absolute"
+
+
+def test_camera_defaults_no_viewer_options_or_fovy():
+    cam = base.camera([-71.0, 42.3], heading=0, tilt=90)
+    tags = {child.tag for child in cam}
+    assert "gx:ViewerOptions" not in tags
+    assert "gx:fovy" not in tags
+
+
+def test_camera_two_element_coords_default_altitude():
+    cam = base.camera([-71.0, 42.3], heading=0, tilt=90)
+    assert cam.find("altitude").text == "0"
+
+
+def test_camera_streetview_emits_option_without_enabled_attr():
+    cam = base.camera([-71.0, 42.3], heading=0, tilt=90, streetview=True)
+    # gx: tags carry a literal colon; find() would treat it as a namespace, so
+    # walk the children directly.
+    viewer = [c for c in cam if c.tag == "gx:ViewerOptions"][0]
+    option = [c for c in viewer if c.tag == "gx:option"][0]
+    assert option.get("name") == "streetview"
+    assert option.get("enabled") is None
+
+
+def test_camera_pano_id_forces_streetview_and_emits_pano_id():
+    cam = base.camera([-71.0, 42.3], heading=0, tilt=90, pano_id="ABC123")
+    viewer = [c for c in cam if c.tag == "gx:ViewerOptions"][0]
+    tags = {c.tag: c.text for c in viewer}
+    assert tags.get("gx:streetViewPanoId") == "ABC123"
+    # the streetview option is present even though streetview was not passed
+    option = [c for c in viewer if c.tag == "gx:option"][0]
+    assert option.get("name") == "streetview"
+
+
+def test_camera_date_and_fov_emitted_when_given():
+    cam = base.camera([-71.0, 42.3], heading=0, tilt=90, streetview=True,
+                      date="2025-08", fov=70)
+    viewer = [c for c in cam if c.tag == "gx:ViewerOptions"][0]
+    viewer_tags = {c.tag: c.text for c in viewer}
+    assert viewer_tags.get("gx:streetViewDate") == "2025-08"
+    cam_tags = {c.tag: c.text for c in cam}
+    assert cam_tags.get("gx:fovy") == "70"
+
+
+def test_camera_attaches_as_default_view():
+    view = base.camera([-71.0, 42.3], heading=0, tilt=90)
+    pm = base.point([-71.0, 42.3], "P", cam=view)
+    assert list(pm)[-1].tag == "Camera"
+
+
+# --- _parse_street_view_url -------------------------------------------------
+
+SAMPLE_SV_URL = (
+    "https://www.google.com/maps/@42.3544682,-71.0510368,3a,75y,121.94h,94.79t/"
+    "data=!3m7!1e1!3m5!1sLy4z4nJtSJLvtopnW3Zxhg!2e0!6shttps:%2F%2Fexample"
+    "%3Fpanoid%3DLy4z4nJtSJLvtopnW3Zxhg%26yaw%3D121.9!7i16384!8i8192?entry=ttu"
+)
+
+
+def test_parse_street_view_url_extracts_all_parts():
+    parts = base._parse_street_view_url(SAMPLE_SV_URL)
+    assert parts["lat"] == 42.3544682
+    assert parts["lon"] == -71.0510368
+    assert parts["heading"] == 121.94
+    assert parts["tilt"] == 94.79
+    assert parts["fov"] == 75.0
+    assert parts["pano_id"] == "Ly4z4nJtSJLvtopnW3Zxhg"
+
+
+def test_parse_street_view_url_pano_id_fallback():
+    # No '!1s' token; the pano id must come from the embedded 'panoid=' value.
+    url = "https://www.google.com/maps/@42.35,-71.05,3a,75y,10h,90t/data=!6spanoid=XYZ789!7i16384"
+    assert base._parse_street_view_url(url)["pano_id"] == "XYZ789"
+
+
+def test_parse_street_view_url_rejects_non_street_view():
+    with pytest.raises(ValueError):
+        base._parse_street_view_url("https://www.google.com/maps/place/Boston")
+
+
+# --- street_view ------------------------------------------------------------
+
+def test_street_view_builds_placemark_with_camera():
+    pm = base.street_view(SAMPLE_SV_URL, "Site")
+    assert pm.tag == "Placemark"
+    assert pm.find("name").text == "Site"
+    assert pm.find("Point").find("coordinates").text == "-71.0510368,42.3544682,0"
+    cam = pm.find("Camera")
+    assert cam is not None
+    viewer = [c for c in cam if c.tag == "gx:ViewerOptions"][0]
+    viewer_tags = {c.tag: c.text for c in viewer}
+    assert viewer_tags.get("gx:streetViewPanoId") == "Ly4z4nJtSJLvtopnW3Zxhg"
+    option = [c for c in viewer if c.tag == "gx:option"][0]
+    assert option.get("name") == "streetview"
+
+
+def test_street_view_maps_url_angle():
+    pm = base.street_view(SAMPLE_SV_URL, "Site")
+    cam = pm.find("Camera")
+    assert cam.find("heading").text == "121.94"
+    assert cam.find("tilt").text == "94.79"
+    assert {c.tag: c.text for c in cam}.get("gx:fovy") == "75.0"
+
+
+def test_street_view_overrides_win_over_url():
+    pm = base.street_view(SAMPLE_SV_URL, "Site", heading=10, tilt=80, zoom=40,
+                          roll=5, altitude=12)
+    cam = pm.find("Camera")
+    assert cam.find("heading").text == "10"
+    assert cam.find("tilt").text == "80"
+    assert cam.find("roll").text == "5"
+    assert cam.find("altitude").text == "12"
+    assert {c.tag: c.text for c in cam}.get("gx:fovy") == "40"
+
+
+def test_street_view_date_optional():
+    with_date = base.street_view(SAMPLE_SV_URL, "Site", date="2025-08")
+    viewer = [c for c in with_date.find("Camera") if c.tag == "gx:ViewerOptions"][0]
+    assert any(c.tag == "gx:streetViewDate" for c in viewer)
+
+    without_date = base.street_view(SAMPLE_SV_URL, "Site")
+    viewer = [c for c in without_date.find("Camera") if c.tag == "gx:ViewerOptions"][0]
+    assert not any(c.tag == "gx:streetViewDate" for c in viewer)
+
+
 # --- point -----------------------------------------------------------------
 
 def test_point_basic():
@@ -150,7 +288,7 @@ def test_search_poi_uses_address_and_defaults_name():
 def test_search_poi_custom_description_and_snippet():
     pm = base.search_poi(
         "User Address", hidden=True, name="Label",
-        desc="Balloon text", snip="Short summary",
+        desc="Balloon text", blurb="Short summary",
     )
     assert pm.find("name").text == "Label"
     assert pm.find("visibility").text == "0"
@@ -180,7 +318,7 @@ def test_search_poi_description_falls_back_to_attributes():
 
 
 def test_search_poi_children_in_kml_schema_order():
-    pm = base.search_poi("X", name="N", desc="D", snip="S", style_to_use="st")
+    pm = base.search_poi("X", name="N", desc="D", blurb="S", style_to_use="st")
     tags = [child.tag for child in list(pm)]
     # KML 2.2 AbstractFeatureType sequence for the elements search_poi emits.
     assert tags == ["name", "visibility", "address", "snippet", "description",
@@ -285,7 +423,7 @@ def _make(builder):
 def test_snippet_emitted_only_when_given(builder):
     make = _make(builder)
     assert make().find("snippet") is None
-    pm = make(snip="On State St")
+    pm = make(blurb="On State St")
     assert pm.find("snippet").text == "On State St"
 
 
@@ -311,7 +449,7 @@ def test_attributes_only_balloon_unchanged(builder):
 
 @pytest.mark.parametrize("builder", [base.point, base.line, base.polygon])
 def test_snippet_precedes_description(builder):
-    pm = _make(builder)(snip="S", desc="D")
+    pm = _make(builder)(blurb="S", desc="D")
     tags = [c.tag for c in list(pm)]
     assert tags.index("snippet") < tags.index("description")
 

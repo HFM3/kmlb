@@ -20,31 +20,25 @@ feature, style it, then bundle it all into a document. That's the whole library.
 ```python
 import kmlb
 
-# A reusable point style and a styled marker
-city = kmlb.point_style("city", icon="circle", color=("#ff8800", 100), scale=1.4)
-boston = kmlb.point([-71.0589, 42.3601], "Boston", style_to_use="city")
+# CREATE A POINT
+fountain = kmlb.point([-71.051904, 42.358988, 0], "Rings Fountain")
 
-# A polygon style controls both the fill and the outline stroke
-fill = kmlb.polygon_style("fill", fill_color=("#03cafc", 40),
-                          outline_color=("#03cafc", 100), outline_width=2)
-
-# A polygon with a hole (outer ring first, then a hole)
-ring = [[-71.060, 42.358], [-71.052, 42.358], [-71.052, 42.363], [-71.060, 42.358]]
-hole = [[-71.057, 42.359], [-71.054, 42.359], [-71.054, 42.361], [-71.057, 42.359]]
-block = kmlb.polygon([ring, hole], "Block", style_to_use="fill")
-
-# Assemble the features and styles into a document and write it to disk
-kmlb.kml( "My Places", [boston, block], [city, fill], path="folder/my_places.kml")
+# WRITE KML FILE
+kmlb.kml(
+    "Boston Fountain",  # KML name
+    [fountain],         # Features
+    path="folder/boston_fountain.kml"  # Export path
+)
 ```
 <br>
+## Example 3D Output
 
 [![Building footprints extruded into 3D and viewed in Google Earth, built with kmlb polygons](assets/img/3d-buildings.jpg)](assets/img/3d-buildings.jpg){ .glightbox }
 
 <p class="kmlb-caption">Building footprints extruded into 3D and viewed in Google&nbsp;Earth, built with kmlb polygons.</p>
 
-
 ---
-
+<br>
 
 <div class="kmlb-hero" markdown>
 <div class="kmlb-hero__eyebrow">Reference</div>
@@ -56,12 +50,12 @@ kmlb.kml( "My Places", [boston, block], [city, fill], path="folder/my_places.kml
 
 Build placemarks from coordinates or a search, ready to drop into a folder or document.
 
-| Function | Description                                                                  |
-|---|------------------------------------------------------------------------------|
-| [`point`](reference/features.md#point) | Point placemark from a `[lon, lat]` (or `[lon, lat, elev]`) coordinate sets. |
-| [`search_poi`](reference/features.md#search_poi) | Placemark located by an address or search string, geocoded by Google Earth.  |
-| [`line`](reference/features.md#line) | Line or polyline from an ordered list of coordinates.                        |
-| [`polygon`](reference/features.md#polygon) | Polygon from one or more rings (first ring outer, the rest holes).           |
+| Function | Description                                                                 |
+|---|-----------------------------------------------------------------------------|
+| [`point`](reference/features.md#point) | Point placemark from a `[lon, lat]` (or `[lon, lat, elev]`) coordinate set. |
+| [`search_poi`](reference/features.md#search_poi) | Placemark located by an address or search string, geocoded by Google Earth. |
+| [`line`](reference/features.md#line) | Line or polyline from an ordered list of coordinates.                       |
+| [`polygon`](reference/features.md#polygon) | Polygon from one or more rings (first ring outer, the rest holes).          |
 
 ## Styles
 

@@ -5,16 +5,20 @@
 
 from __future__ import annotations
 
+import re
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Literal, Optional, Sequence, Tuple, Union
+from urllib.parse import unquote
 
 from .colors import get as _color_hex
 from .icons import get as _resolve_icon
 
 __all__ = [
     "look_at",
+    "camera",
     "point",
+    "street_view",
     "search_poi",
     "line",
     "polygon",
@@ -208,6 +212,12 @@ def look_at(coords: Coordinate, distance: float, azimuth: float, tilt: float,
     """
     Creates a KML 'LookAt' element to define a camera angle.
 
+    OVERVIEW:
+        A 'LookAt' orbits a target: it frames the coordinate given by 'coords'
+        from 'distance' meters away, at the given 'azimuth' and 'tilt'. The result
+        can be passed as the 'cam' argument to a feature or document to set a
+        default view.
+
     INPUT:
         coords (List of three Floats):
             A list of x, y, z coordinates as [x, y, z].
@@ -242,9 +252,91 @@ def look_at(coords: Coordinate, distance: float, azimuth: float, tilt: float,
     return lookat
 
 
+def camera(coords: Coordinate, heading: float, tilt: float, *, roll: float = 0.0,
+           z_mode: AltitudeMode = "ABS", fov: Optional[float] = None,
+           streetview: bool = False, pano_id: Optional[str] = None,
+           date: Optional[str] = None) -> ET.Element:
+    """
+    Creates a KML 'Camera' element to define a viewpoint.
+
+    OVERVIEW:
+        A 'Camera' positions the eye in space and aims it, unlike 'LookAt' which orbits a target
+        point. The result can be passed as the 'cam' argument to 'point', 'line', 'polygon',
+        'folder', or 'kml' to set a default view.
+
+        Turning 'streetview' on adds Google's 'gx:ViewerOptions' Street View toggle so that opening
+        the parent feature enters Street View. Supplying a 'pano_id' pins the view to one specific
+        panorama.
+
+    INPUTS:
+        coords (List of two or three Floats):
+            A coordinate as [x, y] or [x, y, z]. The z (altitude) value is optional; if omitted it
+            is treated as 0.
+        heading (Float):
+            The direction that the camera faces in degrees from 0-360.
+        tilt (Float):
+            The tilt of the camera in degrees.
+            A value of 0 degrees points the camera straight down.
+            A value of 90 degrees points the camera at the horizon.
+            Values above 90 degrees point the camera up toward the sky.
+        roll (Float) [Optional]:
+            The rotation of the camera about the axis it looks along, in degrees (Default = 0.0).
+        z_mode (String) [Optional]:
+            An abbreviated altitude mode ('CTG', 'RTG', 'ABS', 'CSF', 'RSF') (Default = 'ABS').
+            'CSF' and 'RSF' clamp to or measure from the sea floor.
+        fov (Float) [Optional]:
+            The vertical field of view of the camera in degrees, written as 'gx:fovy'. A smaller
+            value zooms in (Default = None, meaning no field of view is written).
+        streetview (Bool) [Optional]:
+            True = enable Google Earth's Street View for this viewpoint (Default = False).
+        pano_id (String) [Optional]:
+            The id of a specific Street View panorama to open. Providing a value also enables Street
+            View (Default = None).
+        date (String) [Optional]:
+            The capture date of the Street View panorama to prefer, such as '2025-08' (Default = None).
+
+    OUTPUT:
+        camera (Element):
+            A KML 'Camera' element.
+    """
+
+    cam = ET.Element('Camera')
+
+    # gx:ViewerOptions carries the Street View toggle and pano reference. It is
+    # written first to match Google Earth's own export ordering. The 'streetview'
+    # option is emitted whenever Street View is requested outright or a specific
+    # panorama is named.
+    if streetview or pano_id is not None or date is not None:
+        viewer_options = ET.SubElement(cam, 'gx:ViewerOptions')
+        if streetview or pano_id is not None:
+            ET.SubElement(viewer_options, 'gx:option', {'name': 'streetview'})
+        if pano_id is not None:
+            ET.SubElement(viewer_options, 'gx:streetViewPanoId').text = str(pano_id)
+        if date is not None:
+            ET.SubElement(viewer_options, 'gx:streetViewDate').text = str(date)
+
+    lon = coords[0]
+    lat = coords[1]
+    alt = coords[2] if len(coords) > 2 else 0
+
+    ET.SubElement(cam, 'longitude').text = f"{lon}"
+    ET.SubElement(cam, 'latitude').text = f"{lat}"
+    ET.SubElement(cam, 'altitude').text = f"{alt}"
+    ET.SubElement(cam, 'heading').text = f"{heading}"
+    ET.SubElement(cam, 'tilt').text = f"{tilt}"
+    ET.SubElement(cam, 'roll').text = f"{roll}"
+    _set_altitude_mode(cam, z_mode)
+
+    # gx:fovy (zoom) is written last, again matching Google Earth's ordering.
+    if fov is not None:
+        ET.SubElement(cam, 'gx:fovy').text = f"{fov}"
+
+    return cam
+
+
 def point(coords: Coordinate, name: str, *, headers: Optional[list] = None,
           attrs: Optional[list] = None, desc: Optional[str] = None,
-          snip: Optional[str] = None, z_mode: AltitudeMode = "CTG",
+          blurb: Optional[str] = None, z_mode: AltitudeMode = "CTG",
           style_to_use: Optional[str] = None, hidden: bool = False,
           extrude: bool = False, cam: Optional[ET.Element] = None) -> ET.Element:
     """
@@ -266,7 +358,7 @@ def point(coords: Coordinate, name: str, *, headers: Optional[list] = None,
         desc (String) [Optional]:
             Free text/HTML for the description balloon, rendered above the
             headers/attributes table. On its own it is the whole balloon.
-        snip (String) [Optional]:
+        blurb (String) [Optional]:
             A short summary shown beneath the name in Google Earth's places list.
             Emitted as a '<snippet>' element only when provided.
         z_mode (String) [Optional]:
@@ -281,7 +373,7 @@ def point(coords: Coordinate, name: str, *, headers: Optional[list] = None,
             Only visible when the point is raised (a non-'CTG' z_mode with a
             non-zero elevation). (Default = False).
         cam (Element) [Optional]:
-            A KML 'LookAt' element that defines the default camera angle to the point.
+            A KML 'LookAt' or 'Camera' element that sets the default camera view of the point.
 
     OUTPUTS:
         placemark (Element):
@@ -311,8 +403,8 @@ def point(coords: Coordinate, name: str, *, headers: Optional[list] = None,
         attrs = []
 
     # Short places-list summary, then the description balloon.
-    if snip is not None:
-        ET.SubElement(placemark, 'snippet').text = str(snip)
+    if blurb is not None:
+        ET.SubElement(placemark, 'snippet').text = str(blurb)
     ET.SubElement(placemark, "description").text = _description_text(desc, headers, attrs)
 
     # Create KML point as a child of placemark
@@ -337,9 +429,148 @@ def point(coords: Coordinate, name: str, *, headers: Optional[list] = None,
     return placemark
 
 
+def _parse_street_view_url(url: str) -> dict:
+    """
+    Extracts Street View parameters from a Google Maps URL.
+
+    OVERVIEW:
+        Reads the location, camera angle, and panorama id out of a Google Maps Street View link.
+        The location is the '@<lat>,<lon>' pair that follows '/maps/', the camera tokens are the
+        comma-separated values ending in 'y' (field of view), 'h' (heading), and 't' (tilt), and
+        the panorama id is the '!1s<id>' token in the 'data=' segment, with the 'panoid=<id>'
+        parameter in the embedded thumbnail URL as a fallback.
+
+    INPUT:
+        url (String):
+            A Google Maps Street View URL.
+
+    OUTPUT:
+        parts (Dictionary):
+            A dictionary with keys 'lon', 'lat', 'heading', 'tilt', 'fov', and 'pano_id'.
+            'heading', 'tilt', and 'fov' are 'None' when the URL does not contain them.
+
+    Raises 'ValueError' when the location or panorama id cannot be found.
+    """
+
+    text = str(url)
+
+    # Location: the '@lat,lon' pair (latitude first) that follows '/maps/@'.
+    coord_match = re.search(r'@(-?\d+\.\d+),(-?\d+\.\d+)', text)
+
+    # Panorama id: the '!1s<id>' token, or the embedded 'panoid=<id>' as a fallback.
+    pano_match = re.search(r'!1s([^!?/]+)', text)
+    if pano_match is None:
+        pano_match = re.search(r'panoid(?:%3D|=)([^&%!]+)', text)
+
+    if coord_match is None or pano_match is None:
+        raise ValueError(
+            "URL is not a recognized Google Maps Street View link. Expected a "
+            "'.../@<lat>,<lon>,...' location and a panorama id ('!1s<id>' or 'panoid=<id>')."
+        )
+
+    def _token(suffix: str) -> Optional[float]:
+        # Camera tokens look like '75y', '121.94h', '94.79t'.
+        match = re.search(r'(-?\d+\.?\d*)' + suffix + r'\b', text)
+        return float(match.group(1)) if match else None
+
+    return {
+        'lon': float(coord_match.group(2)),
+        'lat': float(coord_match.group(1)),
+        'heading': _token('h'),
+        'tilt': _token('t'),
+        'fov': _token('y'),
+        'pano_id': unquote(pano_match.group(1)),
+    }
+
+
+def street_view(url: str, name: str = "Street View", *, headers: Optional[list] = None,
+                attrs: Optional[list] = None, desc: Optional[str] = None,
+                blurb: Optional[str] = None, style_to_use: Optional[str] = None,
+                hidden: bool = False, extrude: bool = False,
+                heading: Optional[float] = None, tilt: Optional[float] = None,
+                roll: float = 0.0, zoom: Optional[float] = None, altitude: float = 0.0,
+                z_mode: AltitudeMode = "ABS", date: Optional[str] = None) -> ET.Element:
+    """
+    Creates a KML point marker that opens a Google Street View panorama.
+
+    OVERVIEW:
+        Parses a Google Maps Street View URL and builds a point placemark whose default camera
+        opens the exact panorama the URL points to. The location, heading, tilt, field of view, and
+        panorama id are read from the URL; opening the placemark in Google Earth enters Street View
+        at that panorama.
+
+        A URL cannot carry a camera altitude or a panorama capture date, so those are supplied
+        through the 'altitude' and 'date' arguments. The 'heading', 'tilt', 'zoom', and 'roll'
+        arguments override the camera angle parsed from the URL for tight adjustment.
+
+    INPUTS:
+        url (String):
+            A Google Maps Street View URL.
+        name (String) [Optional]:
+            The name to be given to the point (Default = 'Street View').
+        headers (List) [Optional]:
+            A list of titles (headers) for the attributes of the point feature.
+        attrs (List) [Optional]:
+            A list of the properties (attributes) of the point.
+        desc (String) [Optional]:
+            Free text/HTML for the description balloon, rendered above the
+            headers/attributes table. On its own it is the whole balloon.
+        blurb (String) [Optional]:
+            A short summary shown beneath the name in Google Earth's places list.
+            Emitted as a '<snippet>' element only when provided.
+        style_to_use (String) [Optional]:
+            The name of the point style to be used (Default = None).
+        hidden (Bool) [Optional]:
+            A value of 'True' or 'False' where 'False' means the point will be visible (Default = 'False').
+        extrude (Bool) [Optional]:
+            True = draw a vertical tether line from the point down to the ground (Default = False).
+        heading (Float) [Optional]:
+            Overrides the camera heading parsed from the URL, in degrees from 0-360 (Default = None).
+        tilt (Float) [Optional]:
+            Overrides the camera tilt parsed from the URL, in degrees where 0 points straight down
+            and 90 points at the horizon (Default = None).
+        roll (Float) [Optional]:
+            The rotation of the camera about the axis it looks along, in degrees (Default = 0.0).
+        zoom (Float) [Optional]:
+            Overrides the camera field of view ('gx:fovy') parsed from the URL, in degrees. A
+            smaller value zooms in (Default = None).
+        altitude (Float) [Optional]:
+            The altitude of the Street View camera in meters (Default = 0.0).
+        z_mode (String) [Optional]:
+            An abbreviated altitude mode ('CTG', 'RTG', 'ABS', 'CSF', 'RSF') for the camera (Default = 'ABS').
+        date (String) [Optional]:
+            The capture date of the Street View panorama to prefer, such as '2025-08' (Default = None).
+
+    OUTPUT:
+        placemark (Element):
+            An XML element representing a KML Placemark.
+    """
+
+    parsed = _parse_street_view_url(url)
+
+    # Camera angle: an explicit override wins, then the value parsed from the URL,
+    # then a sane fallback for the rare URL that omits a token.
+    if heading is None:
+        heading = parsed['heading'] if parsed['heading'] is not None else 0.0
+    if tilt is None:
+        tilt = parsed['tilt'] if parsed['tilt'] is not None else 90.0
+    if zoom is None:
+        zoom = parsed['fov'] if parsed['fov'] is not None else 60.0
+
+    lon = parsed['lon']
+    lat = parsed['lat']
+
+    cam = camera([lon, lat, altitude], heading, tilt, roll=roll, z_mode=z_mode,
+                 fov=zoom, streetview=True, pano_id=parsed['pano_id'], date=date)
+
+    return point([lon, lat], name, headers=headers, attrs=attrs, desc=desc,
+                 blurb=blurb, style_to_use=style_to_use, hidden=hidden,
+                 extrude=extrude, cam=cam)
+
+
 def search_poi(poi: str, name: Optional[str] = None, *, headers: Optional[list] = None,
                attrs: Optional[list] = None, desc: Optional[str] = None,
-               snip: Optional[str] = None, style_to_use: Optional[str] = None,
+               blurb: Optional[str] = None, style_to_use: Optional[str] = None,
                hidden: bool = False) -> ET.Element:
     """
     Creates a KML point marker from a Point of Interest (POI) or an address.
@@ -362,7 +593,7 @@ def search_poi(poi: str, name: Optional[str] = None, *, headers: Optional[list] 
         desc (String) [Optional]:
             Free text/HTML for the placemark's description balloon, rendered above the
             headers/attributes table. On its own it is the whole balloon.
-        snip (String) [Optional]:
+        blurb (String) [Optional]:
             A short summary shown beneath the placemark's name in Google Earth's places list. Emitted
             as a '<snippet>' element only when provided.
         style_to_use (String) [Optional]:
@@ -393,8 +624,8 @@ def search_poi(poi: str, name: Optional[str] = None, *, headers: Optional[list] 
     ET.SubElement(placemark, 'address').text = str(poi)
 
     # Short places-list summary.
-    if snip is not None:
-        ET.SubElement(placemark, 'snippet').text = str(snip)
+    if blurb is not None:
+        ET.SubElement(placemark, 'snippet').text = str(blurb)
 
     # Description balloon: an explicit 'description' blurb sits above the
     # headers/attributes table. Exactly one <description> is emitted.
@@ -416,7 +647,7 @@ def search_poi(poi: str, name: Optional[str] = None, *, headers: Optional[list] 
 
 def line(coords: Sequence[Coordinate], name: str, *, headers: Optional[list] = None,
          attrs: Optional[list] = None, desc: Optional[str] = None,
-         snip: Optional[str] = None, z_mode: AltitudeMode = "CTG",
+         blurb: Optional[str] = None, z_mode: AltitudeMode = "CTG",
          style_to_use: Optional[str] = None, hidden: bool = False,
          follow_terrain: bool = True, extrude: bool = False,
          cam: Optional[ET.Element] = None) -> ET.Element:
@@ -440,7 +671,7 @@ def line(coords: Sequence[Coordinate], name: str, *, headers: Optional[list] = N
         desc (String) [Optional]:
             Free text/HTML for the description balloon, rendered above the
             headers/attributes table. On its own it is the whole balloon.
-        snip (String) [Optional]:
+        blurb (String) [Optional]:
             A short summary shown beneath the name in Google Earth's places list.
             Emitted as a '<snippet>' element only when provided.
         z_mode (String) [Optional]:
@@ -457,7 +688,7 @@ def line(coords: Sequence[Coordinate], name: str, *, headers: Optional[list] = N
         extrude (Bool) [Optional]:
             True = Vertices of the line are extruded toward the center of the Earth. (Default = False).
         cam (Element) [Optional]:
-            A KML 'LookAt' element that defines the default camera angle to the line.
+            A KML 'LookAt' or 'Camera' element that sets the default camera view of the line.
 
     OUTPUT:
         placemark (Element):
@@ -487,8 +718,8 @@ def line(coords: Sequence[Coordinate], name: str, *, headers: Optional[list] = N
         attrs = []
 
     # Short places-list summary, then the description balloon.
-    if snip is not None:
-        ET.SubElement(placemark, 'snippet').text = str(snip)
+    if blurb is not None:
+        ET.SubElement(placemark, 'snippet').text = str(blurb)
     ET.SubElement(placemark, "description").text = _description_text(desc, headers, attrs)
 
     # Create KML line as a child of placemark
@@ -524,7 +755,7 @@ def line(coords: Sequence[Coordinate], name: str, *, headers: Optional[list] = N
 
 def polygon(coords: Sequence[Sequence[Coordinate]], name: str, *, headers: Optional[list] = None,
             attrs: Optional[list] = None, desc: Optional[str] = None,
-            snip: Optional[str] = None, z_mode: AltitudeMode = "CTG",
+            blurb: Optional[str] = None, z_mode: AltitudeMode = "CTG",
             style_to_use: Optional[str] = None, hidden: bool = False,
             follow_terrain: bool = True, extrude: bool = False,
             cam: Optional[ET.Element] = None) -> ET.Element:
@@ -549,7 +780,7 @@ def polygon(coords: Sequence[Sequence[Coordinate]], name: str, *, headers: Optio
         desc (String) [Optional]:
             Free text/HTML for the description balloon, rendered above the
             headers/attributes table. On its own it is the whole balloon.
-        snip (String) [Optional]:
+        blurb (String) [Optional]:
             A short summary shown beneath the name in Google Earth's places list.
             Emitted as a '<snippet>' element only when provided.
         z_mode (String) [Optional]:
@@ -566,7 +797,7 @@ def polygon(coords: Sequence[Sequence[Coordinate]], name: str, *, headers: Optio
         extrude (Bool) [Optional]:
             True = Vertices of the polygon are extruded toward the center of the Earth. (Default = False).
         cam (Element) [Optional]:
-            A KML 'LookAt' element that defines the default camera angle to the polygon.
+            A KML 'LookAt' or 'Camera' element that sets the default camera view of the polygon.
 
     OUTPUT:
         placemark (Element):
@@ -596,8 +827,8 @@ def polygon(coords: Sequence[Sequence[Coordinate]], name: str, *, headers: Optio
         attrs = []
 
     # Short places-list summary, then the description balloon.
-    if snip is not None:
-        ET.SubElement(placemark, 'snippet').text = str(snip)
+    if blurb is not None:
+        ET.SubElement(placemark, 'snippet').text = str(blurb)
     ET.SubElement(placemark, "description").text = _description_text(desc, headers, attrs)
 
     # Create KML polygon as a child of placemark
@@ -886,7 +1117,7 @@ def folder(name: str, items: Sequence[ET.Element], *, desc: str = '',
                 to a folder and that item is set to be visible, the containing folder will become visible as well -
                 even if the folder is set to hidden. (Default = `True`)
         cam (Element) [Optional]:
-            A KML 'LookAt' element that defines the default camera angle to the folder.
+            A KML 'LookAt' or 'Camera' element that sets the default camera view of the folder.
 
     OUTPUT:
         new_folder (Element):
@@ -946,7 +1177,7 @@ def kml(name: str, features: Sequence[ET.Element], *, path: Optional[str] = None
             True = Root folder is collapsed.
             False = Root folder is open/expanded.
         cam (Element) [Optional]:
-            A KML 'LookAt' element that defines the default camera angle for the document.
+            A KML 'LookAt' or 'Camera' element that sets the default camera view for the document.
 
     OUTPUT:
         kml_string (String):

@@ -5,7 +5,9 @@
 
 The feature, style, and document builders live in :mod:`kmlb.base` and are
 re-exported here, so ``kmlb.point(...)``, ``kmlb.kml(...)`` and friends work
-directly. Higher-level shapes live in the :mod:`kmlb.shapes` submodule
+directly. Camera views (``kmlb.look_at``, ``kmlb.camera``) and the Street View
+placemark builder (``kmlb.street_view``) live there too. Higher-level shapes
+live in the :mod:`kmlb.shapes` submodule
 (``kmlb.shapes.wedge``). Geodesic measurements
 (``kmlb.distance``, ``kmlb.bearing``, ``kmlb.destination``) live in
 :mod:`kmlb.geodesy` and are re-exported here.
@@ -15,6 +17,7 @@ from __future__ import annotations
 
 from . import colors, icons, shapes
 from .base import (
+    camera,
     folder,
     kml,
     line,
@@ -26,14 +29,17 @@ from .base import (
     polygon,
     polygon_style,
     search_poi,
+    street_view,
 )
 from .geodesy import bearing, destination, distance
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "look_at",
+    "camera",
     "point",
+    "street_view",
     "search_poi",
     "line",
     "polygon",

@@ -1,7 +1,7 @@
 <div class="kmlb-hero" markdown>
 <div class="kmlb-hero__eyebrow">Reference</div>
 <h2 class="kmlb-hero__title">Features</h2>
-<p class="kmlb-hero__sub">The placemark builders: <code>point</code>, <code>search_poi</code>, <code>line</code>, and <code>polygon</code>. Each returns a KML element ready to drop into a <a href="../views_export/#folder">folder</a> or <a href="../views_export/#kml">kml</a> document.</p>
+<p class="kmlb-hero__sub">The placemark builders: <code>point</code>, <code>search_poi</code>, <code>street_view</code>, <code>line</code>, and <code>polygon</code>. Each returns a KML element ready to drop into a <a href="../views_export/#folder">folder</a> or <a href="../views_export/#kml">kml</a> document.</p>
 </div>
 
 ## point
@@ -11,7 +11,7 @@ Builds a point placemark from a single coordinate pair in `[x, y, z]` or
 
 ```python
 point(coords, name, *, headers=None, attrs=None, desc=None,
-      snip=None, z_mode="CTG", style_to_use=None, hidden=False,
+      blurb=None, z_mode="CTG", style_to_use=None, hidden=False,
       extrude=False, cam=None) -> Element
 ```
 
@@ -22,12 +22,12 @@ point(coords, name, *, headers=None, attrs=None, desc=None,
 | `headers` | `list` | `None` | Attribute names, paired positionally with `attrs`.                                                                                                                                                               |
 | `attrs` | `list` | `None` | Attribute values shown in the description balloon and `ExtendedData`.                                                                                                                                            |
 | `desc` | `str` | `None` | Free text/HTML for the description balloon, rendered above the `headers`/`attrs` table.                                                                                                                          |
-| `snip` | `str` | `None` | Short summary shown beneath the name in Google Earth's places list. Emitted only when provided.                                                                                                                  |
+| `blurb` | `str` | `None` | Short summary shown beneath the name in Google Earth's places list. Emitted only when provided.                                                                                                                 |
 | `z_mode` | `str` | `'CTG'` | Altitude mode: CTG (clampToGround, on the ground; the default), RTG (relativeToGround, above ground level), ABS (absolute, above sea level), CSF (clampToSeaFloor, on the sea floor), or RSF (relativeToSeaFloor, above the sea floor). See [Altitude modes](getting_started.md#altitude-modes). |
 | `style_to_use` | `str` | `None` | Name/ID of a [`point_style`](styles.md#point_style) to reference.                                                                                                                                                |
 | `hidden` | `bool` | `False` | `True` makes the point start hidden.                                                                                                                                                                             |
 | `extrude` | `bool` | `False` | Draw a vertical tether line from the point down to the ground. Visible only when the point is raised (a non-`CTG` altitude mode with a non-zero altitude).                                                       |
-| `cam` | `Element` | `None` | A [`look_at`](views_export.md#look_at) element for a default view.                                                                                                                                               |
+| `cam` | `Element` | `None` | A [`look_at`](views_export.md#look_at) or [`camera`](views_export.md#camera) element for a default view.                                                                                                                                               |
 
 !!! success "Returns"
     `Element`: a KML `Placemark` containing a `Point`.
@@ -56,8 +56,8 @@ kmlb.point([-71.0589, 42.3601], "Boston", desc="Capital of Massachusetts.")
 Add a places-list snippet
 
 ```python
-# snip: a short summary under the name in the Places list (not the balloon)
-kmlb.point([-71.0589, 42.3601], "Boston", snip="State capital")
+# blurb: a short summary under the name in the Places list (not the balloon)
+kmlb.point([-71.0589, 42.3601], "Boston", blurb="State capital")
 ```
 
 Add an attribute table
@@ -87,7 +87,7 @@ Everything together
 city = kmlb.point_style("city", icon="triangle", color="red", scale=1.4)
 view = kmlb.look_at([-71.0589, 42.3601, 0], distance=600, azimuth=210, tilt=55)
 kmlb.point([-71.0589, 42.3601, 150], "Boston",
-           desc="Capital of Massachusetts.", snip="State capital",
+           desc="Capital of Massachusetts.", blurb="State capital",
            headers=["Population"], attrs=[654776],
            z_mode="RTG", extrude=True,
            style_to_use="city", cam=view)
@@ -104,7 +104,7 @@ the point accordingly.
 
 ```python
 search_poi(poi, name=None, *, headers=None, attrs=None,
-           desc=None, snip=None,
+           desc=None, blurb=None,
            style_to_use=None, hidden=False) -> Element
 ```
 
@@ -115,7 +115,7 @@ search_poi(poi, name=None, *, headers=None, attrs=None,
 | `headers` | `list` | `None` | Attribute names. |
 | `attrs` | `list` | `None` | Attribute values. |
 | `desc` | `str` | `None` | Free text/HTML for the description balloon, rendered above the `headers`/`attrs` table. |
-| `snip` | `str` | `None` | Short summary shown beneath the name in Google Earth's places list. Emitted only when provided. |
+| `blurb` | `str` | `None` | Short summary shown beneath the name in Google Earth's places list. Emitted only when provided. |
 | `style_to_use` | `str` | `None` | Name/ID of a point style to reference. |
 | `hidden` | `bool` | `False` | `True` makes the point start hidden. |
 
@@ -143,8 +143,76 @@ kmlb.search_poi("4 Jersey St, Boston", "Fenway Park")
 Add a balloon, a snippet, and a style
 
 ```python
-kmlb.search_poi("Fenway Park, Boston", snip="MLB ballpark",
+kmlb.search_poi("Fenway Park, Boston", blurb="MLB ballpark",
                 desc="Home of the Boston Red Sox", style_to_use="redTriangle")
+```
+
+---
+
+## street_view
+
+Builds a point placemark from a Google Maps Street View URL. The location,
+heading, tilt, zoom, and panorama id are read from the URL, and the placemark's
+default [`camera`](views_export.md#camera) opens that exact panorama in Google
+Earth's Street View.
+
+```python
+street_view(url, name="Street View", *, headers=None, attrs=None,
+            desc=None, blurb=None, style_to_use=None, hidden=False,
+            extrude=False, heading=None, tilt=None, roll=0.0,
+            zoom=None, altitude=0.0, z_mode="ABS", date=None) -> Element
+```
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `url` | `str` | required | A Google Maps Street View URL (the `.../@lat,lng,...` share link). |
+| `name` | `str` | `'Street View'` | Placemark name. |
+| `headers` | `list` | `None` | Attribute names, paired positionally with `attrs`. |
+| `attrs` | `list` | `None` | Attribute values shown in the description balloon and `ExtendedData`. |
+| `desc` | `str` | `None` | Free text/HTML for the description balloon, rendered above the `headers`/`attrs` table. |
+| `blurb` | `str` | `None` | Short summary shown beneath the name in Google Earth's places list. Emitted only when provided. |
+| `style_to_use` | `str` | `None` | Name/ID of a [`point_style`](styles.md#point_style) to reference. |
+| `hidden` | `bool` | `False` | `True` makes the point start hidden. |
+| `extrude` | `bool` | `False` | Draw a vertical tether line from the point down to the ground. |
+| `heading` | `float` | `None` | Override the camera heading parsed from the URL, `0`–`360` degrees. |
+| `tilt` | `float` | `None` | Override the camera tilt: `0` (straight down) to `90` (horizon). |
+| `roll` | `float` | `0.0` | Rotation about the axis the camera looks along, in degrees. |
+| `zoom` | `float` | `None` | Override the field of view (`gx:fovy`) in degrees; a smaller value zooms in. |
+| `altitude` | `float` | `0.0` | Altitude of the Street View camera, in meters. |
+| `z_mode` | `str` | `'ABS'` | Altitude mode for the camera. See [Altitude modes](getting_started.md#altitude-modes). |
+| `date` | `str` | `None` | Preferred panorama capture date, such as `'2025-08'`. |
+
+!!! success "Returns"
+    `Element`: a KML `Placemark` containing a `Point` and a Street View `Camera`.
+
+!!! note
+    A URL cannot carry a camera altitude or a panorama capture date, so those
+    come from the `altitude` and `date` arguments. The `heading`, `tilt`,
+    `zoom`, and `roll` arguments override the angle parsed from the URL for tight
+    adjustment.
+
+**Examples**
+
+The simplest Street View placemark: paste a URL
+
+```python
+url = "https://www.google.com/maps/@42.3544682,-71.0510368,3a,75y,121.94h,94.79t/data=..."
+kmlb.street_view(url, "303 Congress St")
+```
+
+Fine-tune the camera angle and zoom
+
+```python
+kmlb.street_view(url, "303 Congress St", tilt=92, zoom=70)
+```
+
+Everything together
+
+```python
+kmlb.street_view(url, "303 Congress St",
+                 desc="Fort Point Channel", blurb="Waterfront",
+                 headers=["Neighborhood"], attrs=["Seaport"],
+                 tilt=92, zoom=70, altitude=3, date="2025-08")
 ```
 
 ---
@@ -155,7 +223,7 @@ Builds a line/polyline placemark from an ordered list of coordinates.
 
 ```python
 line(coords, name, *, headers=None, attrs=None,
-     desc=None, snip=None, z_mode="CTG",
+     desc=None, blurb=None, z_mode="CTG",
      style_to_use=None, hidden=False, follow_terrain=True,
      extrude=False, cam=None) -> Element
 ```
@@ -167,13 +235,13 @@ line(coords, name, *, headers=None, attrs=None,
 | `headers` | `list` | `None` | Attribute names. |
 | `attrs` | `list` | `None` | Attribute values. |
 | `desc` | `str` | `None` | Free text/HTML for the description balloon, rendered above the `headers`/`attrs` table. |
-| `snip` | `str` | `None` | Short summary shown beneath the name in Google Earth's places list. Emitted only when provided. |
+| `blurb` | `str` | `None` | Short summary shown beneath the name in Google Earth's places list. Emitted only when provided. |
 | `z_mode` | `str` | `'CTG'` | Altitude mode: CTG (clampToGround, on the ground; the default), RTG (relativeToGround, above ground level), ABS (absolute, above sea level), CSF (clampToSeaFloor, on the sea floor), or RSF (relativeToSeaFloor, above the sea floor). See [Altitude modes](getting_started.md#altitude-modes). |
 | `style_to_use` | `str` | `None` | Name/ID of a [`line_style`](styles.md#line_style). |
 | `hidden` | `bool` | `False` | `True` makes the line start hidden. |
 | `follow_terrain` | `bool` | `True` | Tessellate so the line follows terrain (only with `'CTG'`). |
 | `extrude` | `bool` | `False` | Drop vertices to the ground with extruded walls. |
-| `cam` | `Element` | `None` | A `look_at` element for a default view. |
+| `cam` | `Element` | `None` | A [`look_at`](views_export.md#look_at) or [`camera`](views_export.md#camera) element for a default view. |
 
 !!! success "Returns"
     `Element`: a KML `Placemark` containing a `LineString`.
@@ -213,7 +281,7 @@ any additional rings become inner boundaries (holes).
 
 ```python
 polygon(coords, name, *, headers=None, attrs=None,
-        desc=None, snip=None, z_mode="CTG",
+        desc=None, blurb=None, z_mode="CTG",
         style_to_use=None, hidden=False, follow_terrain=True,
         extrude=False, cam=None) -> Element
 ```
@@ -225,13 +293,13 @@ polygon(coords, name, *, headers=None, attrs=None,
 | `headers` | `list` | `None` | Attribute names. |
 | `attrs` | `list` | `None` | Attribute values. |
 | `desc` | `str` | `None` | Free text/HTML for the description balloon, rendered above the `headers`/`attrs` table. |
-| `snip` | `str` | `None` | Short summary shown beneath the name in Google Earth's places list. Emitted only when provided. |
+| `blurb` | `str` | `None` | Short summary shown beneath the name in Google Earth's places list. Emitted only when provided. |
 | `z_mode` | `str` | `'CTG'` | Altitude mode: CTG (clampToGround, on the ground; the default), RTG (relativeToGround, above ground level), ABS (absolute, above sea level), CSF (clampToSeaFloor, on the sea floor), or RSF (relativeToSeaFloor, above the sea floor). See [Altitude modes](getting_started.md#altitude-modes). |
 | `style_to_use` | `str` | `None` | Name/ID of a [`polygon_style`](styles.md#polygon_style). |
 | `hidden` | `bool` | `False` | `True` makes the polygon start hidden. |
 | `follow_terrain` | `bool` | `True` | Tessellate so the polygon follows terrain (only with `'CTG'`). |
 | `extrude` | `bool` | `False` | Extrude vertices toward the ground. |
-| `cam` | `Element` | `None` | A `look_at` element for a default view. |
+| `cam` | `Element` | `None` | A [`look_at`](views_export.md#look_at) or [`camera`](views_export.md#camera) element for a default view. |
 
 !!! success "Returns"
     `Element`: a KML `Placemark` containing a `Polygon`.

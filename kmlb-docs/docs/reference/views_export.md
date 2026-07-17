@@ -20,7 +20,7 @@ folder(name, items, *, desc="", collapsed=True,
 | `desc` | `str` | `''` | Descriptive text. |
 | `collapsed` | `bool` | `True` | `True` shows the folder collapsed in the TOC; `False` expanded. |
 | `hidden` | `bool` | `True` | `True` starts the folder hidden. A folder's effective visibility still follows its visible contents. |
-| `cam` | `Element` | `None` | A `look_at` element for a default view. |
+| `cam` | `Element` | `None` | A [`look_at`](#look_at) or [`camera`](#camera) element for a default view. |
 
 !!! success "Returns"
     `Element`: a KML `Folder` element.
@@ -61,7 +61,7 @@ kml(name, features, *, path=None, desc="", styles=None,
 | `desc` | `str` | `''` | Descriptive text. |
 | `styles` | `list[Element]` | `None` | Style elements referenced by features. |
 | `collapsed` | `bool` | `True` | `True` shows the root document collapsed in the TOC. |
-| `cam` | `Element` | `None` | A `look_at` element for a default view. |
+| `cam` | `Element` | `None` | A [`look_at`](#look_at) or [`camera`](#camera) element for a default view. |
 
 !!! success "Returns"
     `str`: the KML document as an XML string.
@@ -87,8 +87,11 @@ kmlb.kml("My Places", [pt], styles=[city], path="my_places.kml")
 
 ## look_at
 
-Builds a `LookAt` element that defines a default camera angle. The result can be
-passed as the `cam` argument to `point`, `line`, `polygon`, `folder`, or `kml`.
+Builds a `LookAt` element that defines a default camera angle. A `LookAt` orbits
+a **target**: it frames the coordinate given by `coords` from `distance` meters
+away, at the given `azimuth` and `tilt`. The result can be passed as the `cam`
+argument to `point`, `line`, `polygon`, `folder`, or `kml` (so can a
+[`camera`](#camera), which positions the eye itself rather than orbiting a target).
 
 ```python
 look_at(coords, distance, azimuth, tilt, *, z_mode="ABS") -> Element
@@ -117,6 +120,55 @@ Attach it to a feature as its default view
 
 ```python
 view = kmlb.look_at([-71.0589, 42.3601, 0], distance=600, azimuth=210, tilt=55)
+kmlb.point([-71.0589, 42.3601], "Boston", cam=view)
+```
+
+---
+
+## camera
+
+Builds a `Camera` element that positions the eye in space and aims it, rather
+than orbiting a target the way `look_at` does. The result can be passed as the
+`cam` argument to `point`, `line`, `polygon`, `folder`, or `kml`. Turn
+`streetview` on to open the view in Google Earth's Street View.
+
+```python
+camera(coords, heading, tilt, *, roll=0.0, z_mode="ABS", fov=None,
+       streetview=False, pano_id=None, date=None) -> Element
+```
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `coords` | `list[float]` | required | `[longitude, latitude]` or `[longitude, latitude, altitude]` of the eye. Altitude defaults to `0` when omitted. |
+| `heading` | `float` | required | Compass direction the camera faces, `0`–`360` degrees. |
+| `tilt` | `float` | required | Camera tilt: `0` (straight down), `90` (horizon), above `90` looks toward the sky. |
+| `roll` | `float` | `0.0` | Rotation about the axis the camera looks along, in degrees. |
+| `z_mode` | `str` | `'ABS'` | Altitude mode: CTG (clampToGround), RTG (relativeToGround), ABS (absolute, the default here), CSF (clampToSeaFloor), or RSF (relativeToSeaFloor). See [Altitude modes](getting_started.md#altitude-modes). |
+| `fov` | `float` | `None` | Vertical field of view (`gx:fovy`) in degrees; a smaller value zooms in. Omitted when `None`. |
+| `streetview` | `bool` | `False` | `True` enables Google Earth's Street View for this viewpoint. |
+| `pano_id` | `str` | `None` | Id of a specific Street View panorama to open. Providing it also enables Street View. |
+| `date` | `str` | `None` | Preferred panorama capture date, such as `'2025-08'`. |
+
+!!! success "Returns"
+    `Element`: a KML `Camera` element.
+
+!!! note
+    To build a Street View camera straight from a Google Maps URL, use
+    [`street_view`](features.md#street_view), which parses the location, angle,
+    zoom, and panorama id for you.
+
+**Examples**
+
+A camera at eye level looking at the horizon
+
+```python
+kmlb.camera([-71.0589, 42.3601], heading=210, tilt=90)
+```
+
+Enable Street View for a feature's default view
+
+```python
+view = kmlb.camera([-71.0589, 42.3601], heading=210, tilt=90, streetview=True)
 kmlb.point([-71.0589, 42.3601], "Boston", cam=view)
 ```
 

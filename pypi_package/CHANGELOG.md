@@ -13,6 +13,25 @@ from 1.0.0 onward.
 > last version published before `0.1.0`) were maintenance and documentation
 > updates. Exact per-release contents before `0.1.0` are approximate.
 
+## [0.2.0]
+
+### Added
+- `camera`: a `<Camera>` viewpoint builder alongside `look_at`, usable as the
+  `cam` argument on any feature. A `streetview=True` toggle (and optional
+  `pano_id`/`date`) enables Google Earth's Street View for a default view, and
+  `fov` sets the vertical field of view (`gx:fovy`).
+- `street_view`: a point-feature builder that parses a Google Maps Street View
+  URL (location, heading, tilt, zoom, and panorama id) and returns a placemark
+  that opens that exact panorama. Keyword-only `heading`/`tilt`/`zoom`/`roll`
+  override the URL-parsed angle, and `altitude`/`date` supply the values a URL
+  cannot carry.
+
+### Changed
+- **Breaking:** the `snip` argument on every placemark builder (`point`,
+  `search_poi`, `line`, `polygon`) was renamed to `blurb`. It is keyword-only,
+  so update any `snip=` keyword arguments to `blurb=`. The emitted KML is
+  unchanged; the value is still written as a `<snippet>` element.
+
 ## [0.1.0]
 
 A packaging and tooling modernization, with new geometry, color, and styling
