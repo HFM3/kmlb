@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/HFM3/kmlb/master/kmlb-docs/assets/kmlb-logo.png" alt="kmlb logo" width="230">
+  <img src="https://raw.githubusercontent.com/HFM3/kmlb/main/kmlb-docs/assets/kmlb-logo.png" alt="kmlb logo" width="230">
 </p>
 
 # KMLB
@@ -8,7 +8,7 @@
 
 [![Python](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/)
 [![PyPI](https://img.shields.io/pypi/v/kmlb.svg)](https://pypi.org/project/kmlb/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/HFM3/kmlb/blob/master/pypi_package/LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/HFM3/kmlb/blob/main/pypi_package/LICENSE)
 
 KMLB is a dependency-free Python library for writing Google Earth KML files.
 Easily create points, lines, polygons, styles, and folders.
@@ -45,7 +45,7 @@ Open `my_places.kml` in [Google Earth](https://earth.google.com/) to view it.
 ---
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/HFM3/kmlb/master/kmlb-docs/docs/assets/img/3d-buildings.jpg" alt="Orange wireframe building footprints extruded into 3D over Google Earth satellite imagery" width="900">
+  <img src="https://raw.githubusercontent.com/HFM3/kmlb/main/kmlb-docs/docs/assets/img/3d-buildings.jpg" alt="Orange wireframe building footprints extruded into 3D over Google Earth satellite imagery" width="900">
 </p>
 
 <p align="center"><sub>Building footprints extruded into 3D and viewed in Google Earth, built with kmlb polygons.</sub></p>
@@ -63,7 +63,7 @@ The core builders are re-exported at the top level, so `kmlb.point(...)`,
 [reference](https://kmlb.dev/docs/reference/getting_started/) for every function.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/HFM3/kmlb/master/kmlb-docs/docs/assets/img/3d-shapes.jpg" alt="Colored 3D cylinder, cone, dome, and sphere volumes placed over Boston in Google Earth" width="900">
+  <img src="https://raw.githubusercontent.com/HFM3/kmlb/main/kmlb-docs/docs/assets/img/3d-shapes.jpg" alt="Colored 3D cylinder, cone, dome, and sphere volumes placed over Boston in Google Earth" width="900">
 </p>
 
 <p align="center"><sub>3D solids (cylinder, cone, dome, sphere) placed over Boston, built with <code>kmlb.shapes</code>.</sub></p>
@@ -189,7 +189,7 @@ kmlb.kml(
 | `icons` | Built-in marker shorthands (`icon="triangle"`, `"red-paddle"`). |
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/HFM3/kmlb/master/kmlb-docs/docs/assets/img/rf-scene.jpg" alt="A point-to-point Fresnel-zone tube and antenna coverage wedges drawn in 3D over Google Earth" width="900">
+  <img src="https://raw.githubusercontent.com/HFM3/kmlb/main/kmlb-docs/docs/assets/img/rf-scene.jpg" alt="A point-to-point Fresnel-zone tube and antenna coverage wedges drawn in 3D over Google Earth" width="900">
 </p>
 
 <p align="center"><sub>A Fresnel-zone link tube and antenna coverage wedges, built with <code>kmlb.shapes</code>.</sub></p>
@@ -217,5 +217,5 @@ with each release, are at **[kmlb.dev/docs/cite](https://kmlb.dev/docs/cite/)**.
 
 ## License
 
-[MIT](https://github.com/HFM3/kmlb/blob/master/pypi_package/LICENSE). Free to use, modify, and redistribute, including in commercial or
+[MIT](https://github.com/HFM3/kmlb/blob/main/pypi_package/LICENSE). Free to use, modify, and redistribute, including in commercial or
 proprietary tools, as long as the copyright notice and license text are retained.
