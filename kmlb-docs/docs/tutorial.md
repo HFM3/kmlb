@@ -231,5 +231,5 @@ boston = kmlb.folder(
 kmlb.kml("Boston with kmlb", [boston], path="boston.kml",
          styles=[pt_style, line_style, poly_style])
 ```
-
-Next: browse every function in the [API reference](reference/getting_started.md).
+<br><br><br><br><br>
+Shapes

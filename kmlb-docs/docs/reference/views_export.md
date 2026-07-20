@@ -129,12 +129,10 @@ kmlb.point([-71.0589, 42.3601], "Boston", cam=view)
 
 Builds a `Camera` element that positions the eye in space and aims it, rather
 than orbiting a target the way `look_at` does. The result can be passed as the
-`cam` argument to `point`, `line`, `polygon`, `folder`, or `kml`. Turn
-`streetview` on to open the view in Google Earth's Street View.
+`cam` argument to `point`, `line`, `polygon`, `folder`, or `kml`.
 
 ```python
-camera(coords, heading, tilt, *, roll=0.0, z_mode="ABS", fov=None,
-       streetview=False, pano_id=None, date=None) -> Element
+camera(coords, heading, tilt, *, roll=0.0, z_mode="ABS") -> Element
 ```
 
 | Parameter | Type | Default | Description |
@@ -144,18 +142,16 @@ camera(coords, heading, tilt, *, roll=0.0, z_mode="ABS", fov=None,
 | `tilt` | `float` | required | Camera tilt: `0` (straight down), `90` (horizon), above `90` looks toward the sky. |
 | `roll` | `float` | `0.0` | Rotation about the axis the camera looks along, in degrees. |
 | `z_mode` | `str` | `'ABS'` | Altitude mode: CTG (clampToGround), RTG (relativeToGround), ABS (absolute, the default here), CSF (clampToSeaFloor), or RSF (relativeToSeaFloor). See [Altitude modes](getting_started.md#altitude-modes). |
-| `fov` | `float` | `None` | Vertical field of view (`gx:fovy`) in degrees; a smaller value zooms in. Omitted when `None`. |
-| `streetview` | `bool` | `False` | `True` enables Google Earth's Street View for this viewpoint. |
-| `pano_id` | `str` | `None` | Id of a specific Street View panorama to open. Providing it also enables Street View. |
-| `date` | `str` | `None` | Preferred panorama capture date, such as `'2025-08'`. |
 
 !!! success "Returns"
     `Element`: a KML `Camera` element.
 
 !!! note
-    To build a Street View camera straight from a Google Maps URL, use
+    To open a Google Earth Street View panorama, use
     [`street_view`](features.md#street_view), which parses the location, angle,
-    zoom, and panorama id for you.
+    zoom, and panorama id straight from a Google Maps URL. Street View options
+    (and the `gx:fovy` field of view, which only affects Street View and tour
+    playback) are handled there, not on `camera`.
 
 **Examples**
 
@@ -163,13 +159,6 @@ A camera at eye level looking at the horizon
 
 ```python
 kmlb.camera([-71.0589, 42.3601], heading=210, tilt=90)
-```
-
-Enable Street View for a feature's default view
-
-```python
-view = kmlb.camera([-71.0589, 42.3601], heading=210, tilt=90, streetview=True)
-kmlb.point([-71.0589, 42.3601], "Boston", cam=view)
 ```
 
 ---

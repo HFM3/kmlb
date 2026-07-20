@@ -1,6 +1,6 @@
 <div class="kmlb-hero" markdown>
 <div class="kmlb-hero__eyebrow">Reference</div>
-<h2 class="kmlb-hero__title">Features</h2>
+<h2 class="kmlb-hero__title">Map Objects</h2>
 <p class="kmlb-hero__sub">The placemark builders: <code>point</code>, <code>search_poi</code>, <code>street_view</code>, <code>line</code>, and <code>polygon</code>. Each returns a KML element ready to drop into a <a href="../views_export/#folder">folder</a> or <a href="../views_export/#kml">kml</a> document.</p>
 </div>
 
@@ -174,10 +174,10 @@ street_view(url, name="Street View", *, headers=None, attrs=None,
 | `style_to_use` | `str` | `None` | Name/ID of a [`point_style`](styles.md#point_style) to reference. |
 | `hidden` | `bool` | `False` | `True` makes the point start hidden. |
 | `extrude` | `bool` | `False` | Draw a vertical tether line from the point down to the ground. |
-| `heading` | `float` | `None` | Override the camera heading parsed from the URL, `0`–`360` degrees. |
-| `tilt` | `float` | `None` | Override the camera tilt: `0` (straight down) to `90` (horizon). |
-| `roll` | `float` | `0.0` | Rotation about the axis the camera looks along, in degrees. |
-| `zoom` | `float` | `None` | Override the field of view (`gx:fovy`) in degrees; a smaller value zooms in. |
+| `heading` | `float` | `None` | Street View view direction: override the panorama heading parsed from the URL, `0`–`360` degrees. |
+| `tilt` | `float` | `None` | Street View pitch: override the panorama tilt, `0` (straight down) to `90` (horizon). |
+| `roll` | `float` | `0.0` | Roll of the Street View view about the axis it looks along, in degrees. |
+| `zoom` | `float` | `None` | Street View field of view in degrees; a smaller value zooms in. Overrides the value parsed from the URL. |
 | `altitude` | `float` | `0.0` | Altitude of the Street View camera, in meters. |
 | `z_mode` | `str` | `'ABS'` | Altitude mode for the camera. See [Altitude modes](getting_started.md#altitude-modes). |
 | `date` | `str` | `None` | Preferred panorama capture date, such as `'2025-08'`. |
@@ -185,11 +185,15 @@ street_view(url, name="Street View", *, headers=None, attrs=None,
 !!! success "Returns"
     `Element`: a KML `Placemark` containing a `Point` and a Street View `Camera`.
 
-!!! note
+!!! note "These frame the Street View panorama, not Google Earth"
+    `heading`, `tilt`, `roll`, and `zoom` set how the **Street View panorama** is
+    framed when the placemark is opened, that is, the view direction and field of
+    view *inside* Street View. They are not Google Earth's ordinary globe roll,
+    tilt, or zoom, and they do not change how you fly around the map. Each
+    overrides the value parsed from the URL for tight adjustment.
+
     A URL cannot carry a camera altitude or a panorama capture date, so those
-    come from the `altitude` and `date` arguments. The `heading`, `tilt`,
-    `zoom`, and `roll` arguments override the angle parsed from the URL for tight
-    adjustment.
+    come from the `altitude` and `date` arguments instead.
 
 **Examples**
 

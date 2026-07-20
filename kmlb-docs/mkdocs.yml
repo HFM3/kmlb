@@ -28,6 +28,7 @@ theme:
     - navigation.tracking
     - navigation.top
     - navigation.indexes
+    - navigation.expand
     - toc.follow
     - content.code.copy
     - content.code.annotate
@@ -60,14 +61,14 @@ plugins:
 
 nav:
   - kmlb.dev: https://kmlb.dev
-  - Docs home: index.md
-  - Tutorial: tutorial.md
-  - API Reference:
+  - Reference:
+      - index.md
       - Getting Started: reference/getting_started.md
-      - Features: reference/features.md
+      - Map Objects: reference/features.md
       - Styles: reference/styles.md
       - Views & Export: reference/views_export.md
       - Geodesy: reference/geodesy.md
       - Shapes: reference/shapes.md
       - Colors & Icons: reference/colors_icons.md
+  - Tutorial: tutorial.md
   - Cite: cite.md

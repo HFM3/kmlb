@@ -54,6 +54,7 @@ Build placemarks from coordinates or a search, ready to drop into a folder or do
 |---|-----------------------------------------------------------------------------|
 | [`point`](reference/features.md#point) | Point placemark from a `[lon, lat]` (or `[lon, lat, elev]`) coordinate set. |
 | [`search_poi`](reference/features.md#search_poi) | Placemark located by an address or search string, geocoded by Google Earth. |
+| [`street_view`](reference/features.md#street_view) | Point placemark built from a Google Maps Street View URL that opens that panorama. |
 | [`line`](reference/features.md#line) | Line or polyline from an ordered list of coordinates.                       |
 | [`polygon`](reference/features.md#polygon) | Polygon from one or more rings (first ring outer, the rest holes).          |
 
@@ -75,7 +76,8 @@ Group features, set the camera, and write the document.
 |---|---|
 | [`folder`](reference/views_export.md#folder) | Group features and other folders together. |
 | [`kml`](reference/views_export.md#kml) | Assemble features and styles into a KML document and write it to disk. |
-| [`look_at`](reference/views_export.md#look_at) | Camera angle and view for a feature or document. |
+| [`look_at`](reference/views_export.md#look_at) | Camera angle and view that orbits a target, for a feature or document. |
+| [`camera`](reference/views_export.md#camera) | Camera viewpoint (eye position and aim) for a feature or document. |
 | [`networklink_kml`](reference/views_export.md#networklink_kml) | Network-link KML that refreshes from a hosted URL. |
 
 ## Geodesy
@@ -94,7 +96,21 @@ Higher-level geometry built on the core builders.
 
 | Function | Description |
 |---|---|
+| [`circle`](reference/shapes.md#circle) | Circle polygon of a given radius around a point. |
+| [`ellipse`](reference/shapes.md#ellipse) | Ellipse polygon from two semi-axes and an orientation. |
+| [`rectangle`](reference/shapes.md#rectangle) | Rectangle polygon centered on a point, rotatable. |
+| [`ngon`](reference/shapes.md#ngon) | Regular-polygon (triangle, pentagon, hexagon, ...) around a point. |
+| [`annulus`](reference/shapes.md#annulus) | Filled ring polygon (an outer circle with a hole). |
+| [`arc`](reference/shapes.md#arc) | Range-of-reach arc drawn as a line. |
 | [`wedge`](reference/shapes.md#wedge) | Pie-wedge (circular sector) polygon, a natural fit for cellular coverage. |
+| [`corridor`](reference/shapes.md#corridor) | Even-width buffered polygon around a path. |
+| [`concentric_rings`](reference/shapes.md#concentric_rings) | Folder of range-ring outlines from a list or a start/interval/count series. |
+| [`grid`](reference/shapes.md#grid) | Folder of square or hexagonal grid cells. |
+| [`fresnel_zone`](reference/shapes.md#fresnel_zone) | 3D Fresnel-zone tube plus line-of-sight path for a point-to-point radio link. |
+| [`cylinder`](reference/shapes.md#cylinder) | 3D cylinder volume; orientable along any axis. |
+| [`cone`](reference/shapes.md#cone) | 3D cone/beam; apex or base anchored, orientable along any axis. |
+| [`dome`](reference/shapes.md#dome) | 3D hemisphere dome (or bowl when inverted). |
+| [`sphere`](reference/shapes.md#sphere) | 3D sphere; anchor by center or a pole. |
 
 ## Colors & Icons
 
