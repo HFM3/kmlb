@@ -128,19 +128,23 @@ def test_camera_two_element_coords_default_altitude():
     assert cam.find("altitude").text == "0"
 
 
-def test_camera_streetview_emits_option_without_enabled_attr():
-    cam = base.camera([-71.0, 42.3], heading=0, tilt=90, streetview=True)
+# --- _viewer_options --------------------------------------------------------
+
+def test_viewer_options_none_when_unused():
+    assert base._viewer_options() is None
+
+
+def test_viewer_options_streetview_emits_option_without_enabled_attr():
+    viewer = base._viewer_options(streetview=True)
     # gx: tags carry a literal colon; find() would treat it as a namespace, so
     # walk the children directly.
-    viewer = [c for c in cam if c.tag == "gx:ViewerOptions"][0]
     option = [c for c in viewer if c.tag == "gx:option"][0]
     assert option.get("name") == "streetview"
     assert option.get("enabled") is None
 
 
-def test_camera_pano_id_forces_streetview_and_emits_pano_id():
-    cam = base.camera([-71.0, 42.3], heading=0, tilt=90, pano_id="ABC123")
-    viewer = [c for c in cam if c.tag == "gx:ViewerOptions"][0]
+def test_viewer_options_pano_id_forces_streetview_and_emits_pano_id():
+    viewer = base._viewer_options(pano_id="ABC123")
     tags = {c.tag: c.text for c in viewer}
     assert tags.get("gx:streetViewPanoId") == "ABC123"
     # the streetview option is present even though streetview was not passed
@@ -148,14 +152,10 @@ def test_camera_pano_id_forces_streetview_and_emits_pano_id():
     assert option.get("name") == "streetview"
 
 
-def test_camera_date_and_fov_emitted_when_given():
-    cam = base.camera([-71.0, 42.3], heading=0, tilt=90, streetview=True,
-                      date="2025-08", fov=70)
-    viewer = [c for c in cam if c.tag == "gx:ViewerOptions"][0]
+def test_viewer_options_date_emitted_when_given():
+    viewer = base._viewer_options(date="2025-08")
     viewer_tags = {c.tag: c.text for c in viewer}
     assert viewer_tags.get("gx:streetViewDate") == "2025-08"
-    cam_tags = {c.tag: c.text for c in cam}
-    assert cam_tags.get("gx:fovy") == "70"
 
 
 def test_camera_attaches_as_default_view():

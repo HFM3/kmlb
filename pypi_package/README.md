@@ -55,12 +55,18 @@ Open `my_places.kml` in [Google Earth](https://earth.google.com/) to view it.
 | Module | Description |
 |---|---|
 | `kmlb` | Build points, POI/address searches, lines, polygons (with holes), point/line/polygon styles, folders, camera angles, and KML documents; geodesic `distance`, `bearing`, and `destination` |
-| `kmlb.shapes` | Composite geometry: `wedge` (a pie-wedge polygon) |
+| `kmlb.shapes` | Composite geometry: 2D shapes (`circle`, `ellipse`, `rectangle`, `ngon`, `annulus`, `arc`, `wedge`, `corridor`, `concentric_rings`, `grid`), 3D solids (`cylinder`, `cone`, `dome`, `sphere`), and `fresnel_zone` (RF link) |
 | `kmlb.colors` / `kmlb.icons` | Named color presets and built-in marker shorthands for styling, so `color="red"` and `icon="triangle"` instead of hex tuples and full icon URLs |
 
 The core builders are re-exported at the top level, so `kmlb.point(...)`,
 `kmlb.kml(...)`, and friends work directly. See the
 [reference](https://kmlb.dev/docs/reference/getting_started/) for every function.
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/HFM3/kmlb/master/kmlb-docs/assets/3D%20Shapes.jpg" alt="Colored 3D cylinder, cone, dome, and sphere volumes placed over Boston in Google Earth" width="900">
+</p>
+
+<p align="center"><sub>3D solids (cylinder, cone, dome, sphere) placed over Boston, built with <code>kmlb.shapes</code>.</sub></p>
 
 ---
 
@@ -145,6 +151,7 @@ kmlb.kml(
 | **Features** | |
 | `point` | Point placemark from a `[lon, lat]` (or `[lon, lat, elev]`) coordinate. |
 | `search_poi` | Placemark located by an address or search string, geocoded by Google Earth. |
+| `street_view` | Point placemark built from a Google Maps Street View URL that opens that panorama. |
 | `line` | Line or polyline from an ordered list of coordinates. |
 | `polygon` | Polygon from one or more rings (first ring outer, the rest holes). |
 | **Styles** | |
@@ -156,9 +163,24 @@ kmlb.kml(
 | `bearing` | Initial bearing in degrees between two coordinates. |
 | `destination` | Coordinate reached from an origin along a bearing and distance. |
 | **Shapes** | |
+| `shapes.circle` | Circle polygon of a given radius around a point. |
+| `shapes.ellipse` | Ellipse polygon from two semi-axes and an orientation. |
+| `shapes.rectangle` | Rectangle polygon centered on a point, rotatable. |
+| `shapes.ngon` | Regular polygon (triangle, pentagon, hexagon, ...) around a point. |
+| `shapes.annulus` | Filled ring polygon (an outer circle with a hole). |
+| `shapes.arc` | Range-of-reach arc drawn as a line. |
 | `shapes.wedge` | Pie-wedge (circular sector) polygon, useful for cellular coverage sectors. |
+| `shapes.corridor` | Even-width buffered polygon around a path. |
+| `shapes.concentric_rings` | Folder of range-ring outlines from a list or a start/interval/count series. |
+| `shapes.grid` | Folder of square or hexagonal grid cells. |
+| `shapes.fresnel_zone` | 3D Fresnel-zone tube plus line-of-sight path for a point-to-point radio link. |
+| `shapes.cylinder` | 3D cylinder volume; orientable along any axis. |
+| `shapes.cone` | 3D cone/beam; apex or base anchored, orientable along any axis. |
+| `shapes.dome` | 3D hemisphere dome (or bowl when inverted). |
+| `shapes.sphere` | 3D sphere; anchor by center or a pole. |
 | **Views, documents, and links** | |
 | `look_at` | Camera angle and view for a feature or document. |
+| `camera` | Camera viewpoint (eye position and aim) for a feature or document. |
 | `folder` | Group features and other folders together. |
 | `kml` | Assemble features and styles into a KML document and write it to disk. |
 | `networklink_kml` | Network-link KML that refreshes from a hosted URL. |
@@ -166,21 +188,27 @@ kmlb.kml(
 | `colors` | Named color palette (`colors.RED`, or `color="red"`). |
 | `icons` | Built-in marker shorthands (`icon="triangle"`, `"red-paddle"`). |
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/HFM3/kmlb/master/kmlb-docs/assets/RF%20Scene.jpg" alt="A point-to-point Fresnel-zone tube and antenna coverage wedges drawn in 3D over Google Earth" width="900">
+</p>
+
+<p align="center"><sub>A Fresnel-zone link tube and antenna coverage wedges, built with <code>kmlb.shapes</code>.</sub></p>
+
 ---
 
 ## Citing KMLB
 
-Using KMLB in research or published work? A citation is appreciated (it is not
-required under the MIT license, but documented use builds trust in the tool).
-APA, Chicago, and BibTeX formats, kept current with each release, are at
-**[kmlb.dev/docs/cite](https://kmlb.dev/docs/cite/)**.
+Using KMLB in research or published work? Citing is never required, but it's
+always appreciated. Even a quick mention helps others discover KMLB and shows
+where it's making a difference. APA, Chicago, and BibTeX formats, kept current
+with each release, are at **[kmlb.dev/docs/cite](https://kmlb.dev/docs/cite/)**.
 
 ```bibtex
 @software{KMLB,
   author  = {Mros, III, Henry F.},
   title   = {KMLB: KML Builder},
   year    = {2026},
-  version = {0.1.0},
+  version = {0.3.0},
   url     = {https://pypi.org/project/kmlb/}
 }
 ```

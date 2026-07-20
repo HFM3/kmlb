@@ -13,6 +13,47 @@ from 1.0.0 onward.
 > last version published before `0.1.0`) were maintenance and documentation
 > updates. Exact per-release contents before `0.1.0` are approximate.
 
+## [0.3.0]
+
+### Added
+- 2D shape builders composed from the core polygon/line/folder primitives:
+  `shapes.circle`, `shapes.ellipse` (orientable), `shapes.rectangle`
+  (rotatable), `shapes.ngon` (regular polygon), `shapes.annulus` (a filled ring
+  with a hole), `shapes.arc` (a range-of-reach line), `shapes.corridor` (an
+  even-width miter-joined buffer around a path), `shapes.concentric_rings` (a
+  folder of range-ring outlines, radii given explicitly or as a
+  `start`/`interval`/`count` series), and `shapes.grid` (a folder of `'square'`
+  or `'hex'` cells, rotatable to line up with a feature that is not north-up).
+  Each forwards `**kwargs` to its underlying builder.
+- `shapes.cylinder`, `shapes.cone`, `shapes.dome`, `shapes.sphere`: 3D solid
+  builders returning a `MultiGeometry` at absolute altitude. Each is orientable
+  along any axis (`azimuth`/`elevation`, default vertical) and anchored by
+  `anchor` (`'base'`/`'center'`/`'top'`) so `center` can be a face, the middle, or
+  a pole/apex; `cone`'s `'top'` opens a directional beam. Colors, `sides`/`rings`
+  resolution, and end `cap`s are configurable.
+- `shapes.fresnel_zone`: a builder for a point-to-point radio link's Fresnel
+  zone, drawn as a 3D ellipsoid tube (a `MultiGeometry` of polygon panels) around
+  the line of sight, plus the line-of-sight path and a highlighted ring at the
+  widest (mid-path) cross-section, returned together in a folder so each can be
+  toggled on its own. Frequency is given in MHz; tube, path, and center-ring
+  colors are set directly with `zone_color`/`path_color`/`center_ring_color`; the
+  `name` becomes the folder name and is prefixed onto every child so a
+  places-panel search finds the whole link. Uses absolute altitude (endpoint z
+  should be MSL).
+- `shapes.wedge`: a keyword-only `tilt` that gives the sector an antenna-style
+  elevation tilt (`0` flat, `-90` straight down, `90` straight up). A nonzero
+  tilt lifts the sector off the ground and auto-selects absolute altitude
+  (`z_mode='ABS'`, overridable) so the tilt renders; the default attribute table
+  gains a `Tilt` row.
+
+### Changed
+- **Breaking:** `camera` no longer accepts `streetview`, `pano_id`, `date`, or
+  `fov`. These only affected Street View (and tour playback), never a generic
+  camera default view, so they misled callers building a plain viewpoint. Build
+  Street View placemarks with `street_view`, which still parses zoom (`gx:fovy`)
+  and panorama options from the URL. `camera` is now a pure KML `<Camera>`
+  builder (`coords`, `heading`, `tilt`, `roll`, `z_mode`).
+
 ## [0.2.0]
 
 ### Added

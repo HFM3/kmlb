@@ -45,7 +45,10 @@ Color = tuple[str, int]
 # hex string ("#a2d402"), or a (name-or-hex, opacity) pair.
 ColorInput = Union[str, Tuple[str, int]]
 
-# A single [x, y, z] / [longitude, latitude, elevation] coordinate.
+# A single map coordinate: [longitude, latitude] or [longitude, latitude, elevation].
+# Order is x = longitude, y = latitude; elevation (meters above the altitude-mode
+# datum) is optional and defaults to 0. So both [-71.05, 42.36] and
+# [-71.05, 42.36, 30] are valid coordinates.
 Coordinate = Sequence[float]
 
 
@@ -253,9 +256,7 @@ def look_at(coords: Coordinate, distance: float, azimuth: float, tilt: float,
 
 
 def camera(coords: Coordinate, heading: float, tilt: float, *, roll: float = 0.0,
-           z_mode: AltitudeMode = "ABS", fov: Optional[float] = None,
-           streetview: bool = False, pano_id: Optional[str] = None,
-           date: Optional[str] = None) -> ET.Element:
+           z_mode: AltitudeMode = "ABS") -> ET.Element:
     """
     Creates a KML 'Camera' element to define a viewpoint.
 
@@ -263,10 +264,6 @@ def camera(coords: Coordinate, heading: float, tilt: float, *, roll: float = 0.0
         A 'Camera' positions the eye in space and aims it, unlike 'LookAt' which orbits a target
         point. The result can be passed as the 'cam' argument to 'point', 'line', 'polygon',
         'folder', or 'kml' to set a default view.
-
-        Turning 'streetview' on adds Google's 'gx:ViewerOptions' Street View toggle so that opening
-        the parent feature enters Street View. Supplying a 'pano_id' pins the view to one specific
-        panorama.
 
     INPUTS:
         coords (List of two or three Floats):
@@ -284,16 +281,6 @@ def camera(coords: Coordinate, heading: float, tilt: float, *, roll: float = 0.0
         z_mode (String) [Optional]:
             An abbreviated altitude mode ('CTG', 'RTG', 'ABS', 'CSF', 'RSF') (Default = 'ABS').
             'CSF' and 'RSF' clamp to or measure from the sea floor.
-        fov (Float) [Optional]:
-            The vertical field of view of the camera in degrees, written as 'gx:fovy'. A smaller
-            value zooms in (Default = None, meaning no field of view is written).
-        streetview (Bool) [Optional]:
-            True = enable Google Earth's Street View for this viewpoint (Default = False).
-        pano_id (String) [Optional]:
-            The id of a specific Street View panorama to open. Providing a value also enables Street
-            View (Default = None).
-        date (String) [Optional]:
-            The capture date of the Street View panorama to prefer, such as '2025-08' (Default = None).
 
     OUTPUT:
         camera (Element):
@@ -301,19 +288,6 @@ def camera(coords: Coordinate, heading: float, tilt: float, *, roll: float = 0.0
     """
 
     cam = ET.Element('Camera')
-
-    # gx:ViewerOptions carries the Street View toggle and pano reference. It is
-    # written first to match Google Earth's own export ordering. The 'streetview'
-    # option is emitted whenever Street View is requested outright or a specific
-    # panorama is named.
-    if streetview or pano_id is not None or date is not None:
-        viewer_options = ET.SubElement(cam, 'gx:ViewerOptions')
-        if streetview or pano_id is not None:
-            ET.SubElement(viewer_options, 'gx:option', {'name': 'streetview'})
-        if pano_id is not None:
-            ET.SubElement(viewer_options, 'gx:streetViewPanoId').text = str(pano_id)
-        if date is not None:
-            ET.SubElement(viewer_options, 'gx:streetViewDate').text = str(date)
 
     lon = coords[0]
     lat = coords[1]
@@ -326,10 +300,6 @@ def camera(coords: Coordinate, heading: float, tilt: float, *, roll: float = 0.0
     ET.SubElement(cam, 'tilt').text = f"{tilt}"
     ET.SubElement(cam, 'roll').text = f"{roll}"
     _set_altitude_mode(cam, z_mode)
-
-    # gx:fovy (zoom) is written last, again matching Google Earth's ordering.
-    if fov is not None:
-        ET.SubElement(cam, 'gx:fovy').text = f"{fov}"
 
     return cam
 
@@ -427,6 +397,30 @@ def point(coords: Coordinate, name: str, *, headers: Optional[list] = None,
         placemark.append(cam)
 
     return placemark
+
+
+def _viewer_options(streetview: bool = False, pano_id: Optional[str] = None,
+                    date: Optional[str] = None) -> Optional[ET.Element]:
+    """
+    Builds the 'gx:ViewerOptions' Street View block for a Camera, or 'None' when
+    no Street View options are requested.
+
+    The 'streetview' option is emitted whenever Street View is requested outright
+    or a specific panorama is named.
+    """
+
+    if not (streetview or pano_id is not None or date is not None):
+        return None
+
+    viewer_options = ET.Element('gx:ViewerOptions')
+    if streetview or pano_id is not None:
+        ET.SubElement(viewer_options, 'gx:option', {'name': 'streetview'})
+    if pano_id is not None:
+        ET.SubElement(viewer_options, 'gx:streetViewPanoId').text = str(pano_id)
+    if date is not None:
+        ET.SubElement(viewer_options, 'gx:streetViewDate').text = str(date)
+
+    return viewer_options
 
 
 def _parse_street_view_url(url: str) -> dict:
@@ -560,8 +554,15 @@ def street_view(url: str, name: str = "Street View", *, headers: Optional[list] 
     lon = parsed['lon']
     lat = parsed['lat']
 
-    cam = camera([lon, lat, altitude], heading, tilt, roll=roll, z_mode=z_mode,
-                 fov=zoom, streetview=True, pano_id=parsed['pano_id'], date=date)
+    cam = camera([lon, lat, altitude], heading, tilt, roll=roll, z_mode=z_mode)
+
+    # The Street View-only pieces attach around the generic camera: the
+    # 'gx:ViewerOptions' toggle goes first (matching Google Earth's export
+    # ordering) and 'gx:fovy' (zoom) goes last.
+    viewer_options = _viewer_options(streetview=True, pano_id=parsed['pano_id'], date=date)
+    if viewer_options is not None:
+        cam.insert(0, viewer_options)
+    ET.SubElement(cam, 'gx:fovy').text = f"{zoom}"
 
     return point([lon, lat], name, headers=headers, attrs=attrs, desc=desc,
                  blurb=blurb, style_to_use=style_to_use, hidden=hidden,
