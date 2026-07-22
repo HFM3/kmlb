@@ -128,6 +128,27 @@ def test_camera_two_element_coords_default_altitude():
     assert cam.find("altitude").text == "0"
 
 
+def test_camera_streetview_toggle_no_pano_id():
+    cam = base.camera([-71.0, 42.3, 2], heading=90, tilt=90, streetview=True)
+    viewer = [c for c in cam if c.tag == "gx:ViewerOptions"][0]
+    option = [c for c in viewer if c.tag == "gx:option"][0]
+    assert option.get("name") == "streetview"
+    # no panorama id: Google Earth snaps to the nearest panorama.
+    assert [c for c in viewer if c.tag == "gx:streetViewPanoId"] == []
+
+
+def test_camera_fov_emits_fovy():
+    cam = base.camera([-71.0, 42.3, 2], heading=90, tilt=90, fov=45)
+    fovy = [c for c in cam if c.tag == "gx:fovy"][0]
+    assert fovy.text == "45"
+
+
+def test_camera_string_coords_coerced():
+    cam = base.camera(["-71.0", "42.3", "5"], heading=0, tilt=90)
+    assert cam.find("longitude").text == "-71.0"
+    assert cam.find("altitude").text == "5.0"
+
+
 # --- _viewer_options --------------------------------------------------------
 
 def test_viewer_options_none_when_unused():

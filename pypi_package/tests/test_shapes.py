@@ -287,6 +287,23 @@ def test_cylinder_radius_matches():
     assert kmlb.distance(CYL_CENTER, [lon, lat]) == pytest.approx(radius, abs=1.0)
 
 
+def test_cylinder_top_radius_makes_a_frustum():
+    # bottom ring keeps 'radius', top ring uses 'top_radius'
+    c = shapes.cylinder(CYL_CENTER, 300, 400, sides=24, top_radius=100)
+    verts = [[float(x) for x in t.split(",")]
+             for p in _mg_polys(c) for t in p.find(".//coordinates").text.split()]
+    zmin, zmax = min(v[2] for v in verts), max(v[2] for v in verts)
+    r_bot = max(kmlb.distance(CYL_CENTER, v[:2]) for v in verts if abs(v[2] - zmin) < 0.5)
+    r_top = max(kmlb.distance(CYL_CENTER, v[:2]) for v in verts if abs(v[2] - zmax) < 0.5)
+    assert r_bot == pytest.approx(300, abs=1.0)
+    assert r_top == pytest.approx(100, abs=1.0)
+
+
+def test_cylinder_rejects_negative_top_radius():
+    with pytest.raises(ValueError):
+        shapes.cylinder(CYL_CENTER, 300, 400, top_radius=-1)
+
+
 def test_cylinder_color_default_and_override():
     c = shapes.cylinder(CYL_CENTER, 300, 400)
     fill = c.find("Style/PolyStyle/color").text
@@ -409,7 +426,7 @@ def _all_verts(pm):
 def test_cylinder_horizontal_axis_displaces_top():
     center = [-71.06, 42.36, 100.0]
     height = 500.0
-    c = shapes.cylinder(center, 100, height, azimuth=90, elevation=0, sides=24)
+    c = shapes.cylinder(center, 100, height, azimuth=90, tilt=0, sides=24)
     top_cap = _mg_polys(c)[-1]  # walls, bottom cap, then top cap
     verts = [[float(x) for x in v.split(",")] for v in top_cap.find(".//coordinates").text.split()][:-1]
     clon = sum(v[0] for v in verts) / len(verts)
@@ -420,7 +437,9 @@ def test_cylinder_horizontal_axis_displaces_top():
     assert cz == pytest.approx(100.0, abs=1.0)                                    # horizontal -> same alt
 
 
-def test_cone_beam_puts_apex_at_center():
+def test_cone_anchor_top_puts_apex_at_point():
+    # Uniform anchoring: anchor='top' sits the apex at the point and the base
+    # hangs back along the axis, the same direction the other solids move.
     center = [-71.06, 42.36, 300.0]
     height = 500.0
     c = shapes.cone(center, 200, height, anchor="top", sides=12, cap=False)
@@ -428,14 +447,25 @@ def test_cone_beam_puts_apex_at_center():
     apex = [float(x) for x in tri[2].split(",")]          # 3rd vertex = shared apex
     base = [float(x) for x in tri[0].split(",")]          # 1st vertex = base ring
     assert kmlb.distance(center, [apex[0], apex[1]]) == pytest.approx(0.0, abs=1.0)
-    assert apex[2] == pytest.approx(300.0)                # apex at center
-    assert base[2] == pytest.approx(300.0 + height)       # base out along (vertical) axis
+    assert apex[2] == pytest.approx(300.0)                # apex at the point
+    assert base[2] == pytest.approx(300.0 - height)       # base hangs back down the axis
+
+
+def test_cone_anchor_matches_cylinder_direction():
+    # The cone's anchor now moves it the same direction as a cylinder under a
+    # downward axis (tilt=-90): 'base' at the point, body extending down.
+    center = [-71.06, 42.36, 400.0]
+    height = 300.0
+    c = shapes.cone(center, 100, height, tilt=-90, anchor="base", sides=12, cap=False)
+    zs = [float(v.split(",")[2]) for p in _mg_polys(c) for v in p.find(".//coordinates").text.split()]
+    assert max(zs) == pytest.approx(400.0)               # base disc at the point
+    assert min(zs) == pytest.approx(400.0 - height)      # apex below (axis points down)
 
 
 def test_dome_orientation_preserves_panels_and_tilts_pole():
     center = [-71.06, 42.36, 100.0]
     radius = 400.0
-    d = shapes.dome(center, radius, azimuth=90, elevation=0, sides=12, rings=6, cap=False)
+    d = shapes.dome(center, radius, azimuth=90, tilt=0, sides=12, rings=6, cap=False)
     assert len(_mg_polys(d)) == 12 * 6
     # horizontal pole -> the farthest-east vertex sits ~radius east at ~center alt
     pole = max(_all_verts(d), key=lambda v: v[0])
@@ -528,14 +558,33 @@ def test_ellipse_axes_match_semilengths():
     assert min(dists) == pytest.approx(330, abs=2)
 
 
-def test_rectangle_has_four_corners_at_half_diagonal():
-    center = [-71.0217, 42.3407, 0]
-    r = shapes.rectangle(center, 1260, 185)
+def test_rectangle_corners_measured_from_upper_left():
+    corner = [-71.0217, 42.3407, 0]
+    r = shapes.rectangle(corner, 1260, 185)      # default azimuth=90 (width runs east)
     verts = _outer_vertices(r)
     assert len(verts) == 5                       # 4 corners + closing vertex
-    half_diag = math.hypot(1260 / 2, 185 / 2)
-    for v in verts[:-1]:
-        assert kmlb.distance(center, v) == pytest.approx(half_diag, abs=2)
+    dists = sorted(kmlb.distance(corner, v) for v in verts[:-1])
+    assert dists[0] == pytest.approx(0, abs=2)                     # the corner itself
+    assert dists[1] == pytest.approx(185, abs=2)                  # height edge (south)
+    assert dists[2] == pytest.approx(1260, abs=2)                 # width edge (east)
+    assert dists[3] == pytest.approx(math.hypot(1260, 185), abs=2)  # diagonal
+
+
+def test_rectangle_azimuth_is_first_edge_bearing():
+    corner = [-71.0217, 42.3407, 0]
+    # verts[0] is the corner; verts[1] is the far end of the first ('width') edge,
+    # so its bearing from the corner must equal 'azimuth'.
+    for az, length in [(90, 1000), (180, 800), (45, 600)]:
+        r = shapes.rectangle(corner, length, 400, azimuth=az)
+        verts = _outer_vertices(r)
+        assert kmlb.bearing(corner, verts[1]) == pytest.approx(az, abs=0.5)
+        assert kmlb.distance(corner, verts[1]) == pytest.approx(length, abs=2)
+
+
+def test_rectangle_default_first_edge_runs_due_east():
+    corner = [-71.0217, 42.3407, 0]
+    verts = _outer_vertices(shapes.rectangle(corner, 500, 500))
+    assert kmlb.bearing(corner, verts[1]) == pytest.approx(90, abs=0.5)  # width runs east
 
 
 def test_ngon_vertex_count_and_radius():
@@ -552,9 +601,25 @@ def test_ngon_requires_three_sides():
         shapes.ngon([-71.0, 42.0, 0], 100, 2)
 
 
+@pytest.mark.parametrize("call", [
+    lambda: shapes.wedge([-71.0, 42.0, 0], 90, 30, 500, steps=1),
+    lambda: shapes.circle([-71.0, 42.0, 0], 100, steps=2),
+    lambda: shapes.ellipse([-71.0, 42.0, 0], 100, 50, steps=2),
+    lambda: shapes.annulus([-71.0, 42.0, 0], 50, 100, steps=2),
+    lambda: shapes.con_rings([-71.0, 42.0, 0], [100, 200], steps=2),
+    lambda: shapes.fresnel_zone([-71.08, 42.35, 220], [-71.02, 42.39, 180], 5800, cross_rings=1),
+    lambda: shapes.fresnel_zone([-71.08, 42.35, 220], [-71.02, 42.39, 180], 5800, ring_strips=2),
+])
+def test_builders_reject_too_few_vertices(call):
+    # too-small count params raise a clear ValueError instead of crashing or
+    # silently emitting a degenerate polygon.
+    with pytest.raises(ValueError):
+        call()
+
+
 def test_annulus_has_outer_and_inner_ring():
     center = [-70.9795, 42.3658, 0]
-    a = shapes.annulus(center, 225, 160)
+    a = shapes.annulus(center, 160, 225)          # (inner, outer)
     poly = a.find("Polygon")
     outer = _ring_coords(poly.find("outerBoundaryIs"))
     inner = _ring_coords(poly.find("innerBoundaryIs"))
@@ -577,9 +642,9 @@ def test_arc_returns_line_at_radius():
         assert kmlb.distance(center, v) == pytest.approx(3000, abs=3)
 
 
-def test_corridor_keeps_even_width():
+def test_ribbon_keeps_even_width():
     path = [[-71.051781, 42.358581], [-71.051176, 42.356909], [-71.053736, 42.353987]]
-    c = shapes.corridor(path, 45)
+    c = shapes.ribbon(path, 45)
     verts = _outer_vertices(c)
     assert len(verts) == 2 * len(path) + 1        # left + right + closing vertex
     # ring = left[0..2] + right[2..0] + left[0]; endpoints have no turn, so each
@@ -589,13 +654,28 @@ def test_corridor_keeps_even_width():
     assert kmlb.distance(verts[0], verts[5]) == pytest.approx(45, abs=1)
 
 
-def test_corridor_requires_two_points():
+def test_ribbon_per_point_width():
+    # A width list tapers the ribbon: each vertex sits half its own width from the
+    # path. A straight path keeps the miter factor at 1 so the offsets are exact.
+    path = [[-71.05, 42.35], [-71.05, 42.36], [-71.05, 42.37]]
+    c = shapes.ribbon(path, [20, 80, 20])
+    verts = _outer_vertices(c)
+    assert kmlb.distance(path[0], verts[0]) == pytest.approx(10, abs=0.5)    # 20 m end
+    assert kmlb.distance(path[1], verts[1]) == pytest.approx(40, abs=0.5)    # 80 m middle
+
+
+def test_ribbon_width_list_must_match_path():
     with pytest.raises(ValueError):
-        shapes.corridor([[-71.0, 42.0]], 45)
+        shapes.ribbon([[-71.0, 42.0], [-71.0, 42.1]], [20, 30, 40])
 
 
-def test_concentric_rings_explicit_list():
-    c = shapes.concentric_rings([-70.8901, 42.3279, 0], [500, 1000, 1500])
+def test_ribbon_requires_two_points():
+    with pytest.raises(ValueError):
+        shapes.ribbon([[-71.0, 42.0]], 45)
+
+
+def test_con_rings_explicit_list():
+    c = shapes.con_rings([-70.8901, 42.3279, 0], [500, 1000, 1500])
     assert c.tag == "Folder"
     lines = c.findall("Placemark")
     assert len(lines) == 3
@@ -603,18 +683,30 @@ def test_concentric_rings_explicit_list():
     assert all(p.find("LineString") is not None for p in lines)
 
 
-def test_concentric_rings_generator_form():
-    c = shapes.concentric_rings([-70.8901, 42.3279, 0], start=1852, interval=1852, count=3)
+def test_con_rings_generator_form():
+    c = shapes.con_rings([-70.8901, 42.3279, 0], start=1852, interval=1852, count=3)
     assert [p.find("name").text for p in c.findall("Placemark")] == ["1852 m", "3704 m", "5556 m"]
 
 
-def test_concentric_rings_needs_a_form():
+def test_con_rings_needs_a_form():
     with pytest.raises(ValueError):
-        shapes.concentric_rings([-70.8901, 42.3279, 0])
+        shapes.con_rings([-70.8901, 42.3279, 0])
 
 
-def test_grid_square_cell_count():
-    g = shapes.grid([-71.0488, 42.3433, 0], 20, 3, 4)
+def test_con_rings_default_name_and_attributes():
+    c = shapes.con_rings([-70.8901, 42.3279, 0], [500, 1000])
+    assert c.find("name").text == "Concentric Rings"
+    # each ring carries a default attribute table with its ring number and radius
+    descs = [p.find("description").text for p in c.findall("Placemark")]
+    assert all(d for d in descs)
+    assert "Ring" in descs[0] and "500" in descs[0]
+    assert "Ring" in descs[1] and "1000" in descs[1]
+
+
+# --- fishnet ---------------------------------------------------------------
+
+def test_fishnet_cell_count():
+    g = shapes.fishnet([-71.0488, 42.3433, 0], 20, 3, 4)
     assert g.tag == "Folder"
     cells = g.findall("Placemark")
     assert len(cells) == 12                        # cols * rows
@@ -622,29 +714,333 @@ def test_grid_square_cell_count():
     assert len(_outer_vertices(cells[0])) == 5     # square: 4 corners + close
 
 
-def test_grid_hex_cell_count():
-    g = shapes.grid([-71.0488, 42.3433, 0], 30, 2, 2, kind="hex")
+def test_fishnet_first_cell_touches_corner():
+    corner = [-71.0488, 42.3433, 0]
+    g = shapes.fishnet(corner, 20, 3, 4)
+    verts = _outer_vertices(g.findall("Placemark")[0])
+    assert kmlb.distance(corner, verts[0]) == pytest.approx(0.0, abs=0.5)   # upper-left
+
+
+def test_fishnet_rectangular_cell_dim():
+    corner = [-71.0488, 42.3433, 0]
+    g = shapes.fishnet(corner, [60, 20], 1, 1)     # 60 east-west, 20 north-south
+    verts = _outer_vertices(g.findall("Placemark")[0])
+    assert kmlb.distance(corner, verts[1]) == pytest.approx(60, abs=0.5)    # east edge
+    assert kmlb.distance(corner, verts[3]) == pytest.approx(20, abs=0.5)    # south edge
+
+
+def test_fishnet_azimuth_is_first_edge_bearing():
+    corner = [-71.05, 42.36, 0]
+    # azimuth is the compass bearing of the top (column) edge from the corner;
+    # verts[1] is that edge's far end. Increasing azimuth turns the grid clockwise.
+    for az in (90, 180, 45):
+        g = shapes.fishnet(corner, 50, 1, 1, azimuth=az)
+        verts = _outer_vertices(g.findall("Placemark")[0])
+        assert kmlb.bearing(corner, verts[1]) == pytest.approx(az, abs=1)
+
+
+def test_fishnet_ids_name_and_attribute_cells():
+    g = shapes.fishnet([-71.05, 42.36, 0], 20, 2, 1, ids=["A", "B"])
+    cells = g.findall("Placemark")
+    assert [p.find("name").text for p in cells] == ["A", "B"]
+    first = cells[0]
+    data = {d.get("name"): d.find("value").text for d in first.find("ExtendedData").findall("Data")}
+    assert data["ID"] == "A" and data["Row"] == "0" and data["Column"] == "0"
+
+
+def test_fishnet_default_cell_names():
+    g = shapes.fishnet([-71.05, 42.36, 0], 20, 2, 2)
+    assert g.findall("Placemark")[0].find("name").text == "r0c0"
+
+
+def test_fishnet_rejects_zero_dims():
+    with pytest.raises(ValueError):
+        shapes.fishnet([-71.0, 42.0, 0], 20, 0, 3)
+
+
+def test_fishnet_rejects_mismatched_ids():
+    with pytest.raises(ValueError):
+        shapes.fishnet([-71.0, 42.0, 0], 20, 3, 3, ids=["only", "two"])
+
+
+# --- hex_grid --------------------------------------------------------------
+
+def test_hex_grid_cell_count():
+    g = shapes.hex_grid([-71.0488, 42.3433, 0], 30, 2, 2)
     cells = g.findall("Placemark")
     assert len(cells) == 4
     assert len(_outer_vertices(cells[0])) == 7     # hexagon: 6 corners + close
 
 
-def test_grid_orient_turns_cells():
-    center = [-71.048802, 42.343285, 0]
-    plain = shapes.grid(center, 20, 1, 1)
-    turned = shapes.grid(center, 20, 1, 1, orient=45)
-    # a rotation moves the cell's corners but keeps their distance from center
-    v_plain = _outer_vertices(plain.findall("Placemark")[0])[0]
-    v_turned = _outer_vertices(turned.findall("Placemark")[0])[0]
-    assert kmlb.distance(v_plain, v_turned) > 1                       # corner actually moved
-    assert kmlb.distance(center, v_plain) == pytest.approx(kmlb.distance(center, v_turned), abs=0.5)
+def _shares_vertex(cell_a, cell_b, tol=0.05):
+    va = _outer_vertices(cell_a)
+    vb = _outer_vertices(cell_b)
+    return any(kmlb.distance(a, b) < tol for a in va for b in vb)
 
 
-def test_grid_rejects_bad_kind():
+def test_hex_grid_stays_tessellated_when_rotated():
+    # Neighbouring hexes share a vertex at any azimuth (the old grid lost this).
+    corner = [-71.05, 42.36, 0]
+    for az in (0, 30, 45):
+        g = shapes.hex_grid(corner, 40, 2, 1, azimuth=az)
+        cells = g.findall("Placemark")
+        assert _shares_vertex(cells[0], cells[1]), f"lost tessellation at az={az}"
+
+
+def test_hex_grid_rejects_zero_dims():
     with pytest.raises(ValueError):
-        shapes.grid([-71.0, 42.0, 0], 20, 2, 2, kind="triangle")
+        shapes.hex_grid([-71.0, 42.0, 0], 20, 3, 0)
 
 
-def test_grid_rejects_zero_dims():
+# --- hex_field -------------------------------------------------------------
+
+def test_hex_field_cell_count():
+    # A filled hexagon of N rings holds 1 + 3*N*(N+1) cells.
+    for rings, expect in [(1, 7), (2, 19), (3, 37)]:
+        g = shapes.hex_field([-71.05, 42.36, 0], 30, rings)
+        cells = g.findall("Placemark")
+        assert len(cells) == expect
+        assert len(_outer_vertices(cells[0])) == 7   # hexagon: 6 corners + close
+
+
+def test_hex_field_center_cell_is_number_one_on_center():
+    center = [-71.05, 42.36, 0]
+    g = shapes.hex_field(center, 40, 2)
+    cells = g.findall("Placemark")
+    assert cells[0].find("name").text == "1"          # first cell is the center
+    verts = _outer_vertices(cells[0])[:-1]
+    cx = sum(v[0] for v in verts) / 6
+    cy = sum(v[1] for v in verts) / 6
+    assert kmlb.distance(center, [cx, cy]) == pytest.approx(0.0, abs=0.5)
+
+
+def test_hex_field_auto_ids_number_1_to_n_outward():
+    g = shapes.hex_field([-71.05, 42.36, 0], 30, 2)
+    names = [p.find("name").text for p in g.findall("Placemark")]
+    assert names == [str(i) for i in range(1, 20)]    # 1..19 in cell order
+
+
+def test_hex_field_list_ids_label_cells_in_order():
+    labels = [f"c{i}" for i in range(7)]              # rings=1 -> 7 cells
+    g = shapes.hex_field([-71.05, 42.36, 0], 30, 1, ids=labels)
+    cells = g.findall("Placemark")
+    assert [p.find("name").text for p in cells] == labels
+    # the center cell (first) reports ring 0 in its attribute table
+    data = {d.get("name"): d.find("value").text for d in cells[0].find("ExtendedData").findall("Data")}
+    assert data["ID"] == "c0" and data["Ring"] == "0"
+
+
+def test_hex_field_rejects_wrong_length_ids():
     with pytest.raises(ValueError):
-        shapes.grid([-71.0, 42.0, 0], 20, 0, 3)
+        shapes.hex_field([-71.0, 42.0, 0], 20, 1, ids=["too", "few"])
+
+
+def test_hex_field_rejects_zero_rings():
+    with pytest.raises(ValueError):
+        shapes.hex_field([-71.0, 42.0, 0], 20, 0)
+
+
+def test_grid_labels_add_a_labels_folder_of_centroid_points():
+    # default: no subfolders, cells sit directly in the grid folder
+    plain = shapes.fishnet([-71.05, 42.36, 0], 20, 3, 2)
+    assert plain.find("Folder") is None                       # no nested folder
+    assert len(plain.findall("Placemark")) == 6
+    # labels=True: cells and labels each in their own subfolder
+    g = shapes.fishnet([-71.05, 42.36, 0], 20, 3, 2, labels=True)
+    subs = {f.find("name").text: f for f in g.findall("Folder")}
+    assert set(subs) == {"Cells", "Labels"}
+    assert len(subs["Cells"].findall("Placemark")) == 6       # the polygon cells
+    lf = subs["Labels"]
+    pts = lf.findall("Placemark")
+    assert len(pts) == 6                                       # one label per cell
+    assert all(p.find("Point") is not None for p in pts)      # points, not polygons
+    assert lf.find("Style") is not None                       # shared label style present
+    names = {p.find("name").text for p in pts}
+    assert "r0c0" in names
+
+
+def test_hex_field_labels_named_by_cell_number():
+    g = shapes.hex_field([-71.05, 42.36, 0], 30, 1, labels=True)
+    lf = [f for f in g.findall("Folder") if f.find("name").text == "Labels"][0]
+    names = [p.find("name").text for p in lf.findall("Placemark")]
+    assert names == [str(i) for i in range(1, 8)]             # 7 cells, labelled 1..7
+
+
+def test_hex_field_stays_tessellated_when_rotated():
+    center = [-71.05, 42.36, 0]
+    for az in (0, 90, 137):
+        cells = shapes.hex_field(center, 40, 1, azimuth=az).findall("Placemark")
+        # cell 1 is the center, cell 2 is a first-ring neighbour: they share an edge
+        assert _shares_vertex(cells[0], cells[1]), f"lost tessellation at az={az}"
+
+
+def test_hex_grid_rejects_mismatched_nested_ids():
+    with pytest.raises(ValueError):
+        shapes.hex_grid([-71.0, 42.0, 0], 20, 2, 2, ids=[["a", "b"]])   # 1x2, needs 2x2
+
+
+def test_hex_grid_corner_is_top_left():
+    # Corner anchoring matches fishnet: the first hex's bounds start at the corner,
+    # so nothing sits north or west of it.
+    corner = [-71.05, 42.36, 0]
+    verts = _outer_vertices(shapes.hex_grid(corner, 40, 2, 2).findall("Placemark")[0])
+    assert not any(v[1] > corner[1] + 1e-9 for v in verts)   # nothing north of corner
+    assert not any(v[0] < corner[0] - 1e-9 for v in verts)   # nothing west of corner
+
+
+# --- 2D extrude + string coords --------------------------------------------
+
+def test_circle_extrude_flows_through():
+    c = shapes.circle([-71.0, 42.0, 50], 100, extrude=True, z_mode="ABS")
+    assert c.find("Polygon/extrude").text == "1"
+
+
+def test_shape_accepts_string_coordinates():
+    center = ["-71.0", "42.0", "0"]        # e.g. a CSV row
+    c = shapes.circle(center, 100)
+    for v in _outer_vertices(c):
+        assert kmlb.distance([-71.0, 42.0], v) == pytest.approx(100, abs=1)
+
+
+def test_shape_accepts_string_scalar_dimensions():
+    # radius/height/counts read from a CSV cell (strings) are coerced, not rejected.
+    c = shapes.circle([-71.0, 42.0, 0], "100", steps="24")
+    assert len(_outer_vertices(c)) == 25
+    for v in _outer_vertices(c):
+        assert kmlb.distance([-71.0, 42.0], v) == pytest.approx(100, abs=1)
+    cyl = shapes.cylinder(["-71.0", "42.0", "100"], "50", "200")
+    assert cyl.find("MultiGeometry") is not None
+    a = shapes.annulus([-71.0, 42.0, 0], "160", "260")
+    assert a.find("Polygon") is not None
+    cube = shapes.cube([-71.0, 42.0, 0], "40")           # scalar string size
+    assert len(_mg_polys(cube)) == 6
+
+
+# --- 3D solid: style_to_use / cam / headers-attrs ---------------------------
+
+def test_cylinder_style_to_use_overrides_inline_color():
+    c = shapes.cylinder(CYL_CENTER, 100, 200, style_to_use="myStyle")
+    assert c.find("styleUrl").text == "#myStyle"
+    assert c.find("Style") is None                 # inline style suppressed
+
+
+def test_cylinder_cam_appended():
+    cam = kmlb.camera([-71.06, 42.36, 500], 90, 45)
+    c = shapes.cylinder(CYL_CENTER, 100, 200, cam=cam)
+    assert c.find("Camera") is not None
+
+
+def test_solid_headers_attrs_override():
+    c = shapes.cylinder(CYL_CENTER, 100, 200, headers=["Callsign"], attrs=["ABC"])
+    assert "<b>Callsign</b>: ABC" in c.find("description").text
+
+
+# --- cube ------------------------------------------------------------------
+
+def test_cube_panel_count_with_and_without_cap():
+    assert len(_mg_polys(shapes.cube(CYL_CENTER, 100))) == 6          # 4 walls + 2 caps
+    assert len(_mg_polys(shapes.cube(CYL_CENTER, 100, cap=False))) == 4
+
+
+def test_cube_box_size_spans():
+    base_z = 100.0
+    c = shapes.cube([-71.06, 42.36, base_z], [200, 120, 300], cap=False)
+    zs = [float(v.split(",")[2]) for p in _mg_polys(c) for v in p.find(".//coordinates").text.split()]
+    assert min(zs) == pytest.approx(base_z)
+    assert max(zs) == pytest.approx(base_z + 300)
+
+
+# --- pyramid ---------------------------------------------------------------
+
+def test_pyramid_panel_count():
+    sides = 4
+    assert len(_mg_polys(shapes.pyramid(CYL_CENTER, 150, 300, sides))) == sides + 1     # faces + cap
+    assert len(_mg_polys(shapes.pyramid(CYL_CENTER, 150, 300, sides, cap=False))) == sides
+
+
+def test_pyramid_apex_over_center():
+    center = [-71.06, 42.36, 100.0]
+    p = shapes.pyramid(center, 150, 300, 4, cap=False)
+    apex = _mg_polys(p)[0].find(".//coordinates").text.split()[2]   # shared 3rd vertex
+    lon, lat, z = (float(x) for x in apex.split(","))
+    assert kmlb.distance(center, [lon, lat]) == pytest.approx(0.0, abs=1.0)
+    assert z == pytest.approx(100.0 + 300)
+
+
+def test_pyramid_requires_three_sides():
+    with pytest.raises(ValueError):
+        shapes.pyramid(CYL_CENTER, 150, 300, 2)
+
+
+def test_pyramid_default_color_keyed_by_edge_count():
+    # An unstyled pyramid colors by base edge count from PYRAMID_PALETTE and cycles.
+    palette = shapes.PYRAMID_PALETTE
+    for sides in (3, 4, 5, 6, 7):
+        p = shapes.pyramid(CYL_CENTER, 150, 300, sides)
+        expected = base._kml_color(*base._resolve_color(palette[(sides - 3) % len(palette)]))
+        assert p.find("Style/PolyStyle/color").text == expected
+    # different edge counts within one palette cycle -> different colors
+    tri = shapes.pyramid(CYL_CENTER, 150, 300, 3).find("Style/PolyStyle/color").text
+    sq = shapes.pyramid(CYL_CENTER, 150, 300, 4).find("Style/PolyStyle/color").text
+    assert tri != sq
+
+
+def test_pyramid_explicit_color_overrides_palette():
+    p = shapes.pyramid(CYL_CENTER, 150, 300, 4, color="white")
+    assert p.find("Style/PolyStyle/color").text == base._kml_color(*base._resolve_color("white"))
+
+
+# --- soccer ball -----------------------------------------------------------
+
+def test_soccer_ball_is_folder_of_pentagons_and_hexagons():
+    b = shapes.soccer_ball([-71.06, 42.36, 500], 150)
+    assert b.tag == "Folder"
+    placemarks = b.findall("Placemark")
+    assert len(placemarks) == 2
+    counts = sorted(len(p.find("MultiGeometry").findall("Polygon")) for p in placemarks)
+    assert counts == [12, 20]           # 12 pentagons, 20 hexagons
+
+
+def test_soccer_ball_two_tone_colors():
+    b = shapes.soccer_ball([-71.06, 42.36, 500], 150, colors=("red", "white"))
+    pent = [p for p in b.findall("Placemark") if p.find("name").text.endswith("Pentagons")][0]
+    hexa = [p for p in b.findall("Placemark") if p.find("name").text.endswith("Hexagons")][0]
+    assert pent.find("Style/PolyStyle/color").text == base._kml_color(*base._resolve_color("red"))
+    assert hexa.find("Style/PolyStyle/color").text == base._kml_color(*base._resolve_color("white"))
+
+
+def test_soccer_ball_radius():
+    center = [-71.06, 42.36, 500.0]
+    radius = 150.0
+    b = shapes.soccer_ball(center, radius, anchor="center")
+    verts = [[float(x) for x in v.split(",")]
+             for p in b.findall("Placemark") for poly in p.find("MultiGeometry").findall("Polygon")
+             for v in poly.find(".//coordinates").text.split()]
+    # every face vertex sits ~radius from the center in 3D (horizontal + vertical).
+    for v in verts:
+        horiz = kmlb.distance(center, [v[0], v[1]])
+        r3d = math.hypot(horiz, v[2] - center[2])
+        assert r3d == pytest.approx(radius, abs=2.0)
+
+
+def test_soccer_ball_single_color_both_faces():
+    # A single color, or a single (color, opacity) pair, colors both face types.
+    for cols in ["red", ("red", 50)]:
+        b = shapes.soccer_ball([-71.06, 42.36, 500], 100, colors=cols)
+        pent = [p for p in b.findall("Placemark") if p.find("name").text.endswith("Pentagons")][0]
+        hexa = [p for p in b.findall("Placemark") if p.find("name").text.endswith("Hexagons")][0]
+        assert pent.find("Style/PolyStyle/color").text == hexa.find("Style/PolyStyle/color").text
+
+
+def test_soccer_ball_rejects_bad_colors():
+    with pytest.raises(ValueError):
+        shapes.soccer_ball([-71.06, 42.36, 500], 100, colors=("red",))
+
+
+def test_fresnel_zone_cam_attaches_to_folder_and_bare_tube():
+    cam = kmlb.camera([-71.08, 42.35, 300], 90, 60)
+    f = shapes.fresnel_zone(FZ_A, FZ_B, 900, cam=cam)
+    assert any(c.tag == "Camera" for c in f)                       # folder gets the view
+    tube = shapes.fresnel_zone(FZ_A, FZ_B, 900, include_path=False,
+                               center_ring_color=None, cam=cam)
+    assert tube.tag == "Placemark" and any(c.tag == "Camera" for c in tube)

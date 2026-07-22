@@ -13,6 +13,110 @@ from 1.0.0 onward.
 > last version published before `0.1.0`) were maintenance and documentation
 > updates. Exact per-release contents before `0.1.0` are approximate.
 
+## [0.4.0]
+
+### Added
+- `shapes.cube` (a cube or `[x, y, z]` box), `shapes.pyramid` (an n-sided base to
+  an apex, `sides=4` by default), and `shapes.soccer_ball` (a truncated
+  icosahedron of 12 pentagon and 20 hexagon faces, two-tone, returned as a folder
+  of two placemarks). All follow the 3D-solid conventions below.
+- `shapes.cylinder` gained `top_radius`: a different top and base radius tapers the
+  cylinder into a frustum (a truncated cone), for a tank, cooling tower, or bucket;
+  `top_radius=0` closes it to a point. `None` (the default) keeps a true cylinder.
+- `shapes.hex_grid`: a hexagonal grid split out from the old `grid`, corner-
+  anchored with clickable, ID-able cells; hexagons stay tessellated at any
+  `azimuth` (the previous rotation lost the tessellation).
+- `shapes.hex_field`: a center-anchored, hexagon-shaped cluster of flat-top
+  hexagons (a center cell plus `rings` rings of hexagons, `1 + 3*rings*(rings+1)`
+  cells). Cells are numbered `1, 2, 3, ...` outward from the center and carry an
+  ID/Ring attribute table; pass `ids` as a flat list to relabel them in that order.
+- `camera` gained `streetview` and `fov`: set `streetview=True` to enter Google
+  Street View at the camera's location with no panorama ID (Google Earth snaps to
+  the nearest panorama), and `fov` sets the field-of-view zoom (`gx:fovy`).
+- 3D solids (`cylinder`, `cone`, `dome`, `sphere`, and the new solids) now accept
+  overridable `headers`/`attrs`, a `style_to_use` that references a shared style
+  in place of `color`, and a `cam` default view. `fresnel_zone` also
+  gained `cam`.
+- `soccer_ball` accepts a single color for both face types, not only a
+  `(pentagon, hexagon)` pair, and raises a clear error on a malformed `colors`.
+- An unstyled `pyramid` now colors itself by base edge count from the new
+  `shapes.PYRAMID_PALETTE` (triangle, square, pentagon, hexagon each read a
+  different color, cycling for higher counts); pass `color` to override.
+- All shape builders coerce their coordinate components and scalar numeric
+  arguments (radius, height, width, tilt, azimuth, counts, ...) from strings, so
+  values read straight from a CSV row work without manual conversion.
+- `fishnet`/`hex_grid` validate `ids` length with a clear error instead of a raw
+  `IndexError`, and every solid's `z_mode` is now the `AltitudeMode` literal for
+  editor completion.
+- `fishnet`, `hex_grid`, and `hex_field` gained a `labels` toggle: `labels=True`
+  puts the cells in a `Cells` subfolder and adds a sibling `Labels` subfolder with
+  a text label at each cell's centroid (named by its ID), so cells and labels
+  toggle on their own. A `label_color` sets the dot color (defaults to the cells'
+  outline color).
+- `kmlb.icons` gained 25 more marker shorthands (`plane`, `fuel`, `hospital`,
+  `police`, `fire`, `coffee`, `bar`, `lodging`, `rail`, `bus`, `sailing`,
+  `heliport`, `truck`, `fishing`, `cycling`, `trail`, `campground`, and more),
+  and the docs gallery is grouped by kind (symbols, places, recreation, transport,
+  pushpins, paddles).
+
+### Changed
+- **Breaking:** `shapes.corridor` renamed to `shapes.ribbon`, and its `width`
+  now accepts a per-point list as well as a single value, so a ribbon can widen
+  and narrow along its length (a hurricane track's wind field).
+- **Breaking:** `shapes.concentric_rings` renamed to `shapes.con_rings`.
+- **Breaking:** `shapes.grid` removed; use `shapes.fishnet` (rectangular) or
+  `shapes.hex_grid` (hexagonal). Both anchor at an upper-left `corner` (not the
+  center) and give each cell a clickable id/attribute table via `ids`; `fishnet`
+  takes `cell_dim` as one value (square) or `[x, y]` (rectangular).
+- **Breaking:** `shapes.rectangle`, `shapes.fishnet`, and `shapes.hex_grid` now
+  take `azimuth` as the compass bearing of the first edge (the `width` edge for
+  `rectangle`, the column direction for the grids): `0` = north, `90` = east,
+  measured clockwise from true north, the same as `wedge`/`arc`/the 3D solids. The
+  default is `90` (first edge due east), which reproduces the previous north-up
+  orientation. For `rectangle` this replaces `orient` and also moves the anchor
+  from the center to an upper-left `corner` (offset the corner by half the size to
+  keep a centered rectangle); `height` runs 90 degrees clockwise of `width`. For
+  the grids it replaces the earlier rotation-offset `azimuth` (which measured 0
+  from east, not north).
+- **Breaking:** `shapes.annulus` argument order is now `(center, inner_radius,
+  outer_radius)` (inner before outer).
+- **Breaking:** on the 3D solids (`cylinder`, `cone`, `dome`, `sphere`) the
+  `center` argument is renamed `coords` and the `elevation` argument is renamed
+  `tilt` (same meaning: `90` = axis up, `0` = horizontal, `-90` = down). `anchor`
+  is now a `Literal['base', 'center', 'top']` for editor completion.
+- **Breaking:** `shapes.wedge`'s first parameter is renamed `center` to `origin`,
+  and its attribute table now labels that point `Origin Lat`/`Lng`/`Z` (was
+  `Center ...`). The point is the wedge's origin, where the two straight edges meet,
+  not its centroid. Positional callers are unaffected; `wedge(center=...)` keyword
+  callers become `wedge(origin=...)`.
+- Default output names now match their builders on the two shapes that did not:
+  `shapes.con_rings` folders default to `Concentric Rings` (was `Range Rings`), and
+  `shapes.ngon` placemarks to `Ngon` (was `Polygon`, which also collided with the
+  core `polygon` primitive). No signatures change; pass `name` to override as before.
+
+### Fixed
+- `shapes.cone` anchoring: `base`/`center`/`top` now slide the cone the same
+  direction as the other solids under any `tilt` (including `tilt=-90`). The old
+  inverted `top` ("beam") mapping made `anchor='top'` with a downward axis render
+  as if unanchored. A forward-opening beam is now made by aiming the axis and
+  anchoring `top`.
+- `fresnel_zone`'s highlighted center ring is now drawn at true mid-path (the
+  widest cross-section) for any `cross_rings`. It previously used the middle sampled
+  ring, which only landed at mid-path when `cross_rings` was odd; for even counts it
+  sat off-center and its reported radius did not match the drawn ring.
+- Count guards on the shape builders raise a clear `ValueError` instead of crashing
+  or emitting a degenerate polygon: `circle`, `ellipse`, `annulus`, and `con_rings`
+  require `steps >= 3`; `wedge` requires `steps >= 2`; `fresnel_zone` requires
+  `cross_rings >= 2` and `ring_strips >= 3`. (`steps=1`/`cross_rings=1` used to throw
+  a bare `ZeroDivisionError`.)
+- Attribute-table label consistency: `ngon` labels its rotation `Orient` (matching
+  `ellipse`, was `Rotation`), and `wedge` labels `Radius (m)` and `Width (deg)` (its
+  width is an angular beamwidth), matching the units used elsewhere.
+- `shapes.con_rings` now builds a default attribute table on each ring (`Ring`,
+  `Radius (m)`, `Steps`, `Center Lat`/`Lng`), overridable with `headers`/`attrs`
+  like the other builders. It was the only shape whose output carried no attributes,
+  so clicking a ring in Google Earth showed an empty balloon.
+
 ## [0.3.0]
 
 ### Added
@@ -62,7 +166,7 @@ from 1.0.0 onward.
   `pano_id`/`date`) enables Google Earth's Street View for a default view, and
   `fov` sets the vertical field of view (`gx:fovy`).
 - `street_view`: a point-feature builder that parses a Google Maps Street View
-  URL (location, heading, tilt, zoom, and panorama id) and returns a placemark
+  URL (location, heading, tilt, zoom, and panorama ID) and returns a placemark
   that opens that exact panorama. Keyword-only `heading`/`tilt`/`zoom`/`roll`
   override the URL-parsed angle, and `altitude`/`date` supply the values a URL
   cannot carry.

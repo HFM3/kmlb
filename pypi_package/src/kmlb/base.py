@@ -174,6 +174,17 @@ def _resolve_color(value: ColorInput) -> Tuple[str, int]:
     return hex6, opacity
 
 
+def _floatify(coord: Coordinate) -> list:
+    """Coerce a coordinate's string components to float.
+
+    Lets string coordinates feed the builders directly, e.g. a CSV row such as
+    ['-71.05', '42.36', '30']. Numbers are left untouched so existing int/float
+    coordinates keep their exact formatting; only strings are converted. Returns a
+    new [lon, lat] or [lon, lat, z] list, preserving the coordinate's length.
+    """
+    return [c if isinstance(c, (int, float)) else float(c) for c in coord]
+
+
 def _coord_text(coord: Coordinate) -> str:
     """Format a coordinate as a KML 'lon,lat,elev' string.
 
@@ -243,6 +254,7 @@ def look_at(coords: Coordinate, distance: float, azimuth: float, tilt: float,
     """
 
     # Create point's coordinate string.
+    coords = _floatify(coords)
     lookat = ET.Element('LookAt')
     ET.SubElement(lookat, 'longitude').text = f"{coords[0]}"
     ET.SubElement(lookat, 'latitude').text = f"{coords[1]}"
@@ -256,6 +268,7 @@ def look_at(coords: Coordinate, distance: float, azimuth: float, tilt: float,
 
 
 def camera(coords: Coordinate, heading: float, tilt: float, *, roll: float = 0.0,
+           streetview: bool = False, fov: Optional[float] = None,
            z_mode: AltitudeMode = "ABS") -> ET.Element:
     """
     Creates a KML 'Camera' element to define a viewpoint.
@@ -264,6 +277,12 @@ def camera(coords: Coordinate, heading: float, tilt: float, *, roll: float = 0.0
         A 'Camera' positions the eye in space and aims it, unlike 'LookAt' which orbits a target
         point. The result can be passed as the 'cam' argument to 'point', 'line', 'polygon',
         'folder', or 'kml' to set a default view.
+
+        Set 'streetview' to True to have the camera enter Google Street View at the
+        camera's location. No panorama id is needed: Google Earth snaps to the
+        nearest available panorama, and 'heading', 'tilt', and 'fov' aim and zoom
+        the view. (To open one exact, known panorama from a Google Maps link, use
+        'street_view' instead.)
 
     INPUTS:
         coords (List of two or three Floats):
@@ -278,6 +297,12 @@ def camera(coords: Coordinate, heading: float, tilt: float, *, roll: float = 0.0
             Values above 90 degrees point the camera up toward the sky.
         roll (Float) [Optional]:
             The rotation of the camera about the axis it looks along, in degrees (Default = 0.0).
+        streetview (Bool) [Optional]:
+            True = the camera enters Street View at its location, snapping to the
+            nearest panorama (no panorama id required) (Default = False).
+        fov (Float) [Optional]:
+            The camera's field of view ('gx:fovy') in degrees. A smaller value zooms
+            in. Emitted only when provided (Default = None).
         z_mode (String) [Optional]:
             An abbreviated altitude mode ('CTG', 'RTG', 'ABS', 'CSF', 'RSF') (Default = 'ABS').
             'CSF' and 'RSF' clamp to or measure from the sea floor.
@@ -289,6 +314,7 @@ def camera(coords: Coordinate, heading: float, tilt: float, *, roll: float = 0.0
 
     cam = ET.Element('Camera')
 
+    coords = _floatify(coords)
     lon = coords[0]
     lat = coords[1]
     alt = coords[2] if len(coords) > 2 else 0
@@ -300,6 +326,13 @@ def camera(coords: Coordinate, heading: float, tilt: float, *, roll: float = 0.0
     ET.SubElement(cam, 'tilt').text = f"{tilt}"
     ET.SubElement(cam, 'roll').text = f"{roll}"
     _set_altitude_mode(cam, z_mode)
+
+    # Street View toggle goes first (matching Google Earth's export ordering) and
+    # the field-of-view zoom ('gx:fovy') goes last.
+    if streetview:
+        cam.insert(0, _viewer_options(streetview=True))
+    if fov is not None:
+        ET.SubElement(cam, 'gx:fovy').text = f"{fov}"
 
     return cam
 
@@ -351,6 +384,7 @@ def point(coords: Coordinate, name: str, *, headers: Optional[list] = None,
     """
 
     # Create placemark
+    coords = _floatify(coords)
     placemark = ET.Element('Placemark')
     ET.SubElement(placemark, 'name').text = str(name)
 
@@ -697,6 +731,7 @@ def line(coords: Sequence[Coordinate], name: str, *, headers: Optional[list] = N
     """
 
     # Create placemark
+    coords = [_floatify(c) for c in coords]
     placemark = ET.Element('Placemark')
     ET.SubElement(placemark, 'name').text = str(name)
 
@@ -806,6 +841,7 @@ def polygon(coords: Sequence[Sequence[Coordinate]], name: str, *, headers: Optio
     """
 
     # Create placemark
+    coords = [[_floatify(c) for c in ring] for ring in coords]
     placemark = ET.Element('Placemark')
     ET.SubElement(placemark, 'name').text = str(name)
 

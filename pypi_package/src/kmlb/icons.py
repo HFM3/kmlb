@@ -37,6 +37,7 @@ _SHAPES = {
     "camera":     "shapes/camera.png",
     "dining":     "shapes/dining.png",
     "ferry":      "shapes/ferry.png",
+    "plane":      "shapes/airports.png",
     "hiker":      "shapes/hiker.png",
     "golf":       "shapes/golf.png",
     "marina":     "shapes/marina.png",
@@ -44,6 +45,33 @@ _SHAPES = {
     "ranger":     "shapes/ranger_station.png",
     "poi":        "shapes/poi.png",
     "taxi":       "shapes/cabs.png",
+    # places & services
+    "bar":        "shapes/bars.png",
+    "coffee":     "shapes/coffee.png",
+    "fuel":       "shapes/gas_stations.png",
+    "grocery":    "shapes/grocery.png",
+    "shopping":   "shapes/shopping.png",
+    "lodging":    "shapes/lodging.png",
+    "hospital":   "shapes/hospitals.png",
+    "police":     "shapes/police.png",
+    "fire":       "shapes/firedept.png",
+    "phone":      "shapes/phone.png",
+    "toilets":    "shapes/toilets.png",
+    "water":      "shapes/water.png",
+    "webcam":     "shapes/webcam.png",
+    # recreation & outdoors
+    "fishing":    "shapes/fishing.png",
+    "cycling":    "shapes/cycling.png",
+    "trail":      "shapes/trail.png",
+    "picnic":     "shapes/picnic.png",
+    "campground": "shapes/campground.png",
+    "campfire":   "shapes/campfire.png",
+    # transport
+    "rail":       "shapes/rail.png",
+    "bus":        "shapes/bus.png",
+    "sailing":    "shapes/sailing.png",
+    "heliport":   "shapes/heliport.png",
+    "truck":      "shapes/truck.png",
 }
 
 # Colored pushpins. Friendly name -> Google's color abbreviation.

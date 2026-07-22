@@ -83,6 +83,12 @@ pt = kmlb.point([-71.0589, 42.3601], "Boston", style_to_use="city")
 kmlb.kml("My Places", [pt], styles=[city], path="my_places.kml")
 ```
 
+Write to a subfolder _(missing parent folders are created)_
+
+```python
+kmlb.kml("My Places", [pt], path="output/maps/my_places.kml")
+```
+
 ---
 
 ## look_at
@@ -132,7 +138,7 @@ than orbiting a target the way `look_at` does. The result can be passed as the
 `cam` argument to `point`, `line`, `polygon`, `folder`, or `kml`.
 
 ```python
-camera(coords, heading, tilt, *, roll=0.0, z_mode="ABS") -> Element
+camera(coords, heading, tilt, *, roll=0.0, streetview=False, fov=None, z_mode="ABS") -> Element
 ```
 
 | Parameter | Type | Default | Description |
@@ -141,17 +147,19 @@ camera(coords, heading, tilt, *, roll=0.0, z_mode="ABS") -> Element
 | `heading` | `float` | required | Compass direction the camera faces, `0`–`360` degrees. |
 | `tilt` | `float` | required | Camera tilt: `0` (straight down), `90` (horizon), above `90` looks toward the sky. |
 | `roll` | `float` | `0.0` | Rotation about the axis the camera looks along, in degrees. |
+| `streetview` | `bool` | `False` | `True` enters Google Street View at the camera's location, snapping to the nearest panorama (no panorama id needed). |
+| `fov` | `float` | `None` | Field of view (`gx:fovy`) in degrees; smaller zooms in. Emitted only when set. Affects Street View and tour playback. |
 | `z_mode` | `str` | `'ABS'` | Altitude mode: CTG (clampToGround), RTG (relativeToGround), ABS (absolute, the default here), CSF (clampToSeaFloor), or RSF (relativeToSeaFloor). See [Altitude modes](getting_started.md#altitude-modes). |
 
 !!! success "Returns"
     `Element`: a KML `Camera` element.
 
-!!! note
-    To open a Google Earth Street View panorama, use
-    [`street_view`](features.md#street_view), which parses the location, angle,
-    zoom, and panorama id straight from a Google Maps URL. Street View options
-    (and the `gx:fovy` field of view, which only affects Street View and tour
-    playback) are handled there, not on `camera`.
+!!! note "Two ways into Street View"
+    Set `streetview=True` to drop into Street View at the camera's own location:
+    Google Earth snaps to the nearest available panorama, and `heading`, `tilt`,
+    and `fov` aim and zoom the view. To open one *exact, known* panorama from a
+    Google Maps link instead, use [`street_view`](features.md#street_view), which
+    reads the location, angle, zoom, and panorama id straight from the URL.
 
 **Examples**
 
@@ -159,6 +167,14 @@ A camera at eye level looking at the horizon
 
 ```python
 kmlb.camera([-71.0589, 42.3601], heading=210, tilt=90)
+```
+
+Enter Street View at a point, with no panorama id
+
+```python
+# Google Earth snaps to the nearest panorama and aims/zooms with heading/tilt/fov.
+view = kmlb.camera([-71.0589, 42.3601, 2], heading=210, tilt=90, streetview=True, fov=45)
+kmlb.point([-71.0589, 42.3601], "Corner", cam=view)
 ```
 
 ---

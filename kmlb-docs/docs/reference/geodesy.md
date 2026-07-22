@@ -103,7 +103,7 @@ destination(origin, bearing, distance, precision=3) -> list[float]
 !!! success "Returns"
     `list[float]`: the destination `[lon, lat]` (or `[lon, lat, z]`).
 
-!!! note
+!!! tip "Drawing radial shapes"
     Project several points around a center and connect them into a line or
     polygon to draw radial shapes. This is exactly how [`wedge`](shapes.md#wedge)
     builds its arc.

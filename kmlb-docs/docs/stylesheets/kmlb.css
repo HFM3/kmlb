@@ -397,6 +397,15 @@ code, .md-typeset code, pre, .md-typeset pre {
   object-fit: cover;
   object-position: center;
   border-radius: 8px;
+  /* Boost saturation and a touch of contrast so the Google Earth screenshots stay
+     vibrant against the dark theme instead of reading as muted. */
+  filter: saturate(1.28) contrast(1.05);
+}
+/* GLightbox renders the click-to-zoom image in its own container outside
+   .md-typeset, so give the expanded view the same boost as the banner. */
+.glightbox-container .gslide-image img,
+.glightbox-container .gslide-media img {
+  filter: saturate(1.28) contrast(1.05);
 }
 /* Bias the banner crop toward the top of the frame (e.g. to keep a tall tower
    in view instead of clipping it off). */
@@ -457,11 +466,28 @@ code, .md-typeset code, pre, .md-typeset pre {
   border-color: var(--kmlb-accent-light);
 }
 
-/* Row of download buttons: centered, with a little breathing room between them */
-.md-typeset .kmlb-downloads {
-  text-align: center;
-  margin: 1rem 0 1.6rem;
+/* Row of download buttons: centered; a grid whose equal 1fr columns all take
+   the width of the widest label (fit-content container makes the fr resolve to
+   the max-content of the longest button). Markdown wraps the links in a single
+   <p>, so the grid lives on that <p> and the buttons are its grid items. */
+.md-typeset .kmlb-downloads > p {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 1.2rem;
+  width: fit-content;
+  max-width: 100%;
+  margin: 1rem auto 1.6rem;
 }
 .md-typeset .kmlb-downloads .md-button {
-  margin: 0.3rem 0.4rem;
+  margin: 0;
+  text-align: center;
+}
+/* Stack to full-width rows when there isn't room for a single line. */
+@media screen and (max-width: 30em) {
+  .md-typeset .kmlb-downloads > p {
+    grid-auto-flow: row;
+    grid-auto-columns: auto;
+    width: auto;
+  }
 }

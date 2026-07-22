@@ -10,13 +10,13 @@ You only need kmlb (no other dependencies):
 pip install kmlb
 ```
 
-!!! note
+!!! note "Coordinate format"
     Throughout, coordinates are `[x, y, z]` or `[longitude, latitude, elevation]`
     and elevation is in meters. Elevation is optional. Pass `[longitude, latitude]`
     and it defaults to `0`. A zero elevation sits on the ground under the default
     `z_mode="CTG"`.
 
-!!! note
+!!! note "Colors, icons, and styles"
     Colors accept a palette name (`"red"`), a hex string, or a `(color, opacity)`
     pair; icons accept a shorthand (`"triangle"`, `"red-paddle"`) or a full URL. Skip
     `style_to_use` entirely and a feature still gets a tidy default style.
@@ -70,7 +70,7 @@ tower = kmlb.point(
 )
 ```
 
-!!! note
+!!! note "Keyword-only arguments"
     Optional arguments such as `cam`, `style_to_use`, and `z_mode` are
     keyword-only and must be passed by name. Only the required arguments (here the
     coordinates and name) are positional.

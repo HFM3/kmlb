@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "kmlb"
-version = "0.3.0.post1"
+version = "0.4.0"
 
 description = "A straightforward Google Earth KML builder"
 readme = "README.md"

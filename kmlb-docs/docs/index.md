@@ -14,8 +14,9 @@ hide:
 
 ## Example KML Script
 
-Every feature is one Python call that hands back an XML element. Define a
-feature, style it, then bundle it all into a document. That's the whole library.
+Each feature is a single Python call that returns a KML element. Create features,
+give them styles, and gather them into a document to write to disk. That is the
+whole workflow.
 
 ```python
 import kmlb
@@ -43,7 +44,7 @@ kmlb.kml(
 <div class="kmlb-hero" markdown>
 <div class="kmlb-hero__eyebrow">Reference</div>
 <h2 class="kmlb-hero__title">Function references</h2>
-<p class="kmlb-hero__sub">Every function in kmlb, grouped by what it does. Open any group for full signatures, parameters, and worked examples.</p>
+<p class="kmlb-hero__sub">Every kmlb function, grouped by what it does. Follow any link for its full signature, parameters, and worked examples.</p>
 </div>
 
 ## Features
@@ -98,19 +99,24 @@ Higher-level geometry built on the core builders.
 |---|---|
 | [`circle`](reference/shapes.md#circle) | Circle polygon of a given radius around a point. |
 | [`ellipse`](reference/shapes.md#ellipse) | Ellipse polygon from two semi-axes and an orientation. |
-| [`rectangle`](reference/shapes.md#rectangle) | Rectangle polygon centered on a point, rotatable. |
+| [`rectangle`](reference/shapes.md#rectangle) | Rectangle polygon anchored at an upper-left corner, rotatable by azimuth. |
 | [`ngon`](reference/shapes.md#ngon) | Regular-polygon (triangle, pentagon, hexagon, ...) around a point. |
 | [`annulus`](reference/shapes.md#annulus) | Filled ring polygon (an outer circle with a hole). |
 | [`arc`](reference/shapes.md#arc) | Range-of-reach arc drawn as a line. |
 | [`wedge`](reference/shapes.md#wedge) | Pie-wedge (circular sector) polygon, a natural fit for cellular coverage. |
-| [`corridor`](reference/shapes.md#corridor) | Even-width buffered polygon around a path. |
-| [`concentric_rings`](reference/shapes.md#concentric_rings) | Folder of range-ring outlines from a list or a start/interval/count series. |
-| [`grid`](reference/shapes.md#grid) | Folder of square or hexagonal grid cells. |
+| [`ribbon`](reference/shapes.md#ribbon) | Buffered polygon around a path; even or per-point width. |
+| [`con_rings`](reference/shapes.md#con_rings) | Folder of range-ring outlines from a list or a start/interval/count series. |
+| [`fishnet`](reference/shapes.md#fishnet) | Folder of rectangular grid cells from a corner; clickable, id-able. |
+| [`hex_grid`](reference/shapes.md#hex_grid) | Folder of tessellated hexagonal grid cells from a corner. |
+| [`hex_field`](reference/shapes.md#hex_field) | Folder of hexagonal cells in a hexagon-shaped cluster of rings around a center; cells numbered outward from the center. |
 | [`fresnel_zone`](reference/shapes.md#fresnel_zone) | 3D Fresnel-zone tube plus line-of-sight path for a point-to-point radio link. |
-| [`cylinder`](reference/shapes.md#cylinder) | 3D cylinder volume; orientable along any axis. |
-| [`cone`](reference/shapes.md#cone) | 3D cone/beam; apex or base anchored, orientable along any axis. |
+| [`cylinder`](reference/shapes.md#cylinder) | 3D cylinder volume (or a frustum via `top_radius`); orientable along any axis. |
+| [`cone`](reference/shapes.md#cone) | 3D cone; apex or base anchored, orientable along any axis. |
 | [`dome`](reference/shapes.md#dome) | 3D hemisphere dome (or bowl when inverted). |
 | [`sphere`](reference/shapes.md#sphere) | 3D sphere; anchor by center or a pole. |
+| [`cube`](reference/shapes.md#cube) | 3D cube or rectangular box. |
+| [`pyramid`](reference/shapes.md#pyramid) | 3D pyramid with an n-sided base. |
+| [`soccer_ball`](reference/shapes.md#soccer_ball) | 3D truncated icosahedron, two-tone. |
 
 ## Colors & Icons
 

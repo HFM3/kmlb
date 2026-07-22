@@ -55,7 +55,7 @@ Open `my_places.kml` in [Google Earth](https://earth.google.com/) to view it.
 | Module | Description |
 |---|---|
 | `kmlb` | Build points, POI/address searches, lines, polygons (with holes), point/line/polygon styles, folders, camera angles, and KML documents; geodesic `distance`, `bearing`, and `destination` |
-| `kmlb.shapes` | Composite geometry: 2D shapes (`circle`, `ellipse`, `rectangle`, `ngon`, `annulus`, `arc`, `wedge`, `corridor`, `concentric_rings`, `grid`), 3D solids (`cylinder`, `cone`, `dome`, `sphere`), and `fresnel_zone` (RF link) |
+| `kmlb.shapes` | Composite geometry: 2D shapes (`circle`, `ellipse`, `rectangle`, `ngon`, `annulus`, `arc`, `wedge`, `ribbon`, `con_rings`, `fishnet`, `hex_grid`, `hex_field`), 3D solids (`cylinder`, `cone`, `dome`, `sphere`, `cube`, `pyramid`, `soccer_ball`), and `fresnel_zone` (RF link) |
 | `kmlb.colors` / `kmlb.icons` | Named color presets and built-in marker shorthands for styling, so `color="red"` and `icon="triangle"` instead of hex tuples and full icon URLs |
 
 The core builders are re-exported at the top level, so `kmlb.point(...)`,
@@ -165,19 +165,24 @@ kmlb.kml(
 | **Shapes** | |
 | `shapes.circle` | Circle polygon of a given radius around a point. |
 | `shapes.ellipse` | Ellipse polygon from two semi-axes and an orientation. |
-| `shapes.rectangle` | Rectangle polygon centered on a point, rotatable. |
+| `shapes.rectangle` | Rectangle polygon anchored at an upper-left corner, rotatable by azimuth. |
 | `shapes.ngon` | Regular polygon (triangle, pentagon, hexagon, ...) around a point. |
 | `shapes.annulus` | Filled ring polygon (an outer circle with a hole). |
 | `shapes.arc` | Range-of-reach arc drawn as a line. |
 | `shapes.wedge` | Pie-wedge (circular sector) polygon, useful for cellular coverage sectors. |
-| `shapes.corridor` | Even-width buffered polygon around a path. |
-| `shapes.concentric_rings` | Folder of range-ring outlines from a list or a start/interval/count series. |
-| `shapes.grid` | Folder of square or hexagonal grid cells. |
+| `shapes.ribbon` | Buffered polygon around a path; even or per-point width. |
+| `shapes.con_rings` | Folder of range-ring outlines from a list or a start/interval/count series. |
+| `shapes.fishnet` | Folder of rectangular grid cells from a corner; clickable, ID-able. |
+| `shapes.hex_grid` | Folder of tessellated hexagonal grid cells from a corner. |
+| `shapes.hex_field` | Folder of hexagonal cells in a hexagon-shaped cluster of rings around a center; cells numbered outward from the center. |
 | `shapes.fresnel_zone` | 3D Fresnel-zone tube plus line-of-sight path for a point-to-point radio link. |
-| `shapes.cylinder` | 3D cylinder volume; orientable along any axis. |
-| `shapes.cone` | 3D cone/beam; apex or base anchored, orientable along any axis. |
+| `shapes.cylinder` | 3D cylinder volume (or a frustum via `top_radius`); orientable along any axis. |
+| `shapes.cone` | 3D cone; apex or base anchored, orientable along any axis. |
 | `shapes.dome` | 3D hemisphere dome (or bowl when inverted). |
 | `shapes.sphere` | 3D sphere; anchor by center or a pole. |
+| `shapes.cube` | 3D cube or rectangular box. |
+| `shapes.pyramid` | 3D pyramid with an n-sided base. |
+| `shapes.soccer_ball` | 3D truncated icosahedron, two-tone. |
 | **Views, documents, and links** | |
 | `look_at` | Camera angle and view for a feature or document. |
 | `camera` | Camera viewpoint (eye position and aim) for a feature or document. |
@@ -208,7 +213,7 @@ with each release, are at **[kmlb.dev/docs/cite](https://kmlb.dev/docs/cite/)**.
   author  = {Mros, III, Henry F.},
   title   = {KMLB: KML Builder},
   year    = {2026},
-  version = {0.3.0},
+  version = {0.4.0},
   url     = {https://pypi.org/project/kmlb/}
 }
 ```

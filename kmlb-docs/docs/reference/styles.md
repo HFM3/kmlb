@@ -14,21 +14,21 @@ point_style(name, *, icon="circle", color=("#ffff00", 100), scale=1.2,
             line_color=("#ffff00", 100), line_width=2.0) -> Element
 ```
 
-| Parameter | Type | Default | Description |
-|---|---|---|---|
-| `name` | `str` | required | Unique style ID, referenced by `point`'s `style_to_use`. |
-| `icon` | `str` | Google circle | URL of the marker icon. |
-| `color` | `tuple[str, int]` | `('#ffff00', 100)` | Icon `(hex color, opacity)`. |
-| `scale` | `float` | `1.2` | Icon size. |
-| `label_color` | `tuple[str, int]` | `('#ffffff', 100)` | Label `(hex color, opacity)`. |
-| `label_size` | `float` | `1.0` | Label text size. |
-| `line_color` | `tuple[str, int]` | `('#ffff00', 100)` | Tether line `(color, opacity)` for an extruded point. |
-| `line_width` | `float` | `2.0` | Tether line thickness for an extruded point. |
+| Parameter | Type | Default | Description                                                                    |
+|---|---|---|--------------------------------------------------------------------------------|
+| `name` | `str` | required | Unique style ID, referenced by `point`'s `style_to_use`.                       |
+| `icon` | `str` | Google circle | URL of the marker icon.                                                        |
+| `color` | `tuple[str, int]` | `('#ffff00', 100)` | Icon `(hex color, opacity)`. Opacity is `0`-`100` (0 transparent, 100 opaque). |
+| `scale` | `float` | `1.2` | Icon size.                                                                     |
+| `label_color` | `tuple[str, int]` | `('#ffffff', 100)` | Label `(hex color, opacity)`. Opacity is `0`-`100`.                            |
+| `label_size` | `float` | `1.0` | Label text size.                                                               |
+| `line_color` | `tuple[str, int]` | `('#ffff00', 100)` | Tether line `(color, opacity)` for an extruded point. Opacity is `0`-`100`.    |
+| `line_width` | `float` | `2.0` | Tether line thickness for an extruded point.                                   |
 
 !!! success "Returns"
     `Element`: a KML `Style` element with the given `id`.
 
-!!! tip
+!!! tip "Icon catalog"
     A catalog of ready-made icon URLs is at [kml4earth.appspot.com/icons.html](http://kml4earth.appspot.com/icons.html).
 
 **Examples**
@@ -59,6 +59,13 @@ kmlb.point_style("tower", icon="circle", color="red",
                  line_color=("orange", 100), line_width=3)
 ```
 
+Hex color with opacity _(`(hex, 0-100)`; 0 is transparent, 100 is opaque)_
+
+```python
+kmlb.point_style("city", color=("#ff6600", 80),
+                 label_color=("#ffffff", 90))
+```
+
 ---
 
 ## line_style
@@ -73,9 +80,9 @@ line_style(name, *, color=("#ff0000", 100), width=3.0,
 | Parameter | Type | Default | Description |
 |---|---|---|---|
 | `name` | `str` | required | Unique style ID. |
-| `color` | `tuple[str, int]` | `('#ff0000', 100)` | Line `(hex color, opacity)`. |
+| `color` | `tuple[str, int]` | `('#ff0000', 100)` | Line `(hex color, opacity)`. Opacity is `0`-`100` (0 transparent, 100 opaque). |
 | `width` | `float` | `3.0` | Line thickness. |
-| `extrude_color` | `tuple[str, int]` | `('#34c9eb', 35)` | Fill `(hex color, opacity)` for the area below an extruded line. |
+| `extrude_color` | `tuple[str, int]` | `('#34c9eb', 35)` | Fill `(hex color, opacity)` for the area below an extruded line. Opacity is `0`-`100`. |
 
 !!! success "Returns"
     `Element`: a KML `Style` element with the given `id`.
@@ -100,6 +107,12 @@ Set the fill for an extruded line
 kmlb.line_style("fence", color="gold", width=3, extrude_color=("teal", 35))
 ```
 
+Hex color with opacity _(`(hex, 0-100)`; 0 is transparent, 100 is opaque)_
+
+```python
+kmlb.line_style("trail", color=("#ff6600", 80), width=4)
+```
+
 ---
 
 ## polygon_style
@@ -114,8 +127,8 @@ polygon_style(name, *, fill_color=("#03cafc", 40),
 | Parameter | Type | Default | Description |
 |---|---|---|---|
 | `name` | `str` | required | Unique style ID. |
-| `fill_color` | `tuple[str, int]` | `('#03cafc', 40)` | Fill `(hex color, opacity)`. |
-| `outline_color` | `tuple[str, int]` | `('#fcdf03', 100)` | Outline `(hex color, opacity)`. |
+| `fill_color` | `tuple[str, int]` | `('#03cafc', 40)` | Fill `(hex color, opacity)`. Opacity is `0`-`100` (0 transparent, 100 opaque). |
+| `outline_color` | `tuple[str, int]` | `('#fcdf03', 100)` | Outline `(hex color, opacity)`. Opacity is `0`-`100`. |
 | `outline_width` | `float` | `3.0` | Outline thickness. |
 
 !!! success "Returns"
@@ -134,6 +147,13 @@ Custom fill and outline
 ```python
 kmlb.polygon_style("plaza", fill_color=("purple", 40),
                    outline_color="purple", outline_width=2)
+```
+
+Hex color with opacity _(`(hex, 0-100)`; 0 is transparent, 100 is opaque)_
+
+```python
+kmlb.polygon_style("plaza", fill_color=("#03cafc", 40),
+                   outline_color=("#fcdf03", 100))
 ```
 
 ---
